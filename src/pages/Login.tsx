@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, Smartphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,20 +17,47 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        toast({
+          title: "Login gagal",
+          description: error.message === "Invalid login credentials" 
+            ? "Email atau password salah" 
+            : error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login berhasil!",
+          description: "Selamat datang di StockHome",
+        });
+        navigate('/dashboard');
+      }
+    } catch (error) {
       toast({
-        title: "Login berhasil!",
-        description: "Selamat datang di StockHome",
+        title: "Terjadi kesalahan",
+        description: "Silakan coba lagi nanti",
+        variant: "destructive",
       });
-      // In real app, redirect to dashboard
-    }, 1500);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
