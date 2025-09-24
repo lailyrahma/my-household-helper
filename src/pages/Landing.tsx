@@ -119,7 +119,7 @@ const Landing = () => {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/register">
+                <Link to="/login">
                   <Button variant="hero" size="xl" className="w-full sm:w-auto">
                     Daftar Sekarang
                     <ArrowRight className="w-5 h-5" />
