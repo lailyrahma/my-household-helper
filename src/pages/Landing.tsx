@@ -95,6 +95,11 @@ const Landing = () => {
             </div>
             <h1 className="text-2xl font-bold gradient-text">StockHome</h1>
           </div>
+          <Link to="/login">
+            <Button variant="hero-outline" size="lg">
+              Masuk
+            </Button>
+          </Link>
         </div>
       </header>
 
@@ -121,7 +126,7 @@ const Landing = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link to="/login">
                   <Button variant="hero" size="xl" className="w-full sm:w-auto">
-                    Daftar Sekarang
+                    Masuk
                     <ArrowRight className="w-5 h-5" />
                   </Button>
                 </Link>
