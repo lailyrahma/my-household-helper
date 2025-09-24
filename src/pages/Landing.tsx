@@ -126,13 +126,10 @@ const Landing = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link to="/login">
                   <Button variant="hero" size="xl" className="w-full sm:w-auto">
-                    Mulai Sekarang
+                    Masuk
                     <ArrowRight className="w-5 h-5" />
                   </Button>
                 </Link>
-                <Button variant="hero-outline" size="xl" className="w-full sm:w-auto">
-                  Lihat Demo
-                </Button>
               </div>
             </div>
             <div className="relative">
@@ -300,7 +297,7 @@ const Landing = () => {
               <div className="space-y-6">
                 <div>
                   <h3 className="text-2xl font-bold">Premium</h3>
-                  <p className="text-3xl font-bold text-primary mt-2">Rp 49.000</p>
+                  <p className="text-3xl font-bold text-primary mt-2">Rp 20.000</p>
                   <p className="text-muted-foreground">per bulan</p>
                 </div>
                 <div className="space-y-3">
