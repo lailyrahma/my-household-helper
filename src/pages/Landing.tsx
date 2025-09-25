@@ -118,7 +118,7 @@ const Landing = () => {
                   <span className="text-secondary font-semibold"> analisis konsumsi</span>.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 relative z-20">
                 <Link to="/login">
                   <Button variant="hero" size="xl" className="w-full sm:w-auto">
                     Daftar Sekarang
