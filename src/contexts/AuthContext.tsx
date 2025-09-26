@@ -33,6 +33,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Redirect to landing page on page refresh if no session
+        if (event === 'SIGNED_OUT' || (!session && window.location.pathname !== '/' && window.location.pathname !== '/login' && window.location.pathname !== '/register' && window.location.pathname !== '/reset-password')) {
+          window.location.href = '/';
+        }
       }
     );
 
@@ -41,6 +46,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Check if on protected route without session
+      const protectedRoutes = ['/dashboard', '/house'];
+      const isProtectedRoute = protectedRoutes.some(route => window.location.pathname.startsWith(route));
+      
+      if (!session && isProtectedRoute) {
+        window.location.href = '/';
+      }
     });
 
     return () => subscription.unsubscribe();

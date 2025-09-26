@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +14,8 @@ import {
   User,
   LogOut,
   ChevronDown,
-  Settings
+  Settings,
+  Smartphone
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -22,6 +26,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Dashboard = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  if (!user) {
+    return null;
+  }
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   const houses = [
     {
       id: 1,
@@ -51,7 +73,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <Home className="w-5 h-5 text-primary-foreground" />
+              <Smartphone className="w-5 h-5 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-bold gradient-text">StockHome</h1>
           </div>
@@ -123,14 +145,14 @@ const Dashboard = () => {
             {/* Profile Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-2">
-                  <User className="w-4 h-4" />
-                  John Doe
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
+                  <Button variant="ghost" className="gap-2">
+                    <User className="w-4 h-4" />
+                    {user.email}
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="w-4 h-4 mr-2" />
                   Edit Profil
                 </DropdownMenuItem>
@@ -139,7 +161,7 @@ const Dashboard = () => {
                   Ganti Password
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-danger">
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
                 </DropdownMenuItem>
