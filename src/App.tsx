@@ -12,6 +12,12 @@ import Dashboard from "./pages/Dashboard";
 import HouseDashboard from "./pages/HouseDashboard";
 import StockManagement from "./pages/StockManagement";
 import ShoppingList from "./pages/ShoppingList";
+import Members from "./pages/Members";
+import Reports from "./pages/Reports";
+import Timeline from "./pages/Timeline";
+import Predictions from "./pages/Predictions";
+import Notifications from "./pages/Notifications";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,9 +35,15 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/house/:id" element={<HouseDashboard />} />
             <Route path="/house/:id/stock" element={<StockManagement />} />
             <Route path="/house/:id/shopping" element={<ShoppingList />} />
+            <Route path="/house/:id/members" element={<Members />} />
+            <Route path="/house/:id/reports" element={<Reports />} />
+            <Route path="/house/:id/timeline" element={<Timeline />} />
+            <Route path="/house/:id/predictions" element={<Predictions />} />
+            <Route path="/house/:id/notifications" element={<Notifications />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -7,6 +7,7 @@ import {
   FileText, 
   Clock, 
   TrendingUp,
+  Bell,
   ChevronRight
 } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
@@ -31,6 +32,7 @@ const items = [
   { title: "Laporan & Insight", url: "/house/:id/reports", icon: FileText },
   { title: "Timeline Aktivitas", url: "/house/:id/timeline", icon: Clock },
   { title: "Prediksi Barang Habis", url: "/house/:id/predictions", icon: TrendingUp },
+  { title: "Notifikasi", url: "/house/:id/notifications", icon: Bell },
 ]
 
 interface AppSidebarProps {
