@@ -1,22 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import { 
   Home, 
   Users, 
@@ -40,67 +28,12 @@ import {
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [houses, setHouses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newHouseName, setNewHouseName] = useState("");
 
   useEffect(() => {
     if (!user) {
       navigate('/');
-    } else {
-      fetchHouses();
     }
   }, [user, navigate]);
-
-  const fetchHouses = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('rumah')
-        .select('*')
-        .is('tanggal_dihapus', null)
-        .order('tanggal_dibuat', { ascending: false });
-
-      if (error) throw error;
-      setHouses(data || []);
-    } catch (error) {
-      console.error('Error fetching houses:', error);
-      toast.error('Gagal memuat daftar rumah');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddHouse = async () => {
-    if (!newHouseName.trim()) {
-      toast.error('Nama rumah tidak boleh kosong');
-      return;
-    }
-
-    try {
-      // For now, we'll use a temporary user ID of 1
-      // TODO: Implement proper user mapping between auth.users and pengguna table
-      const { data, error } = await supabase
-        .from('rumah')
-        .insert({
-          nama_rumah: newHouseName.trim(),
-          id_pengguna: 1 // Temporary - needs proper user mapping
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast.success('Rumah berhasil ditambahkan');
-      setNewHouseName('');
-      setIsAddDialogOpen(false);
-      fetchHouses();
-    } catch (error) {
-      console.error('Error adding house:', error);
-      toast.error('Gagal menambahkan rumah');
-    }
-  };
 
   if (!user) {
     return null;
@@ -110,6 +43,23 @@ const Dashboard = () => {
     await signOut();
     navigate('/');
   };
+
+  const houses = [
+    {
+      id: 1,
+      name: "Rumah A",
+      members: 4,
+      items: 23,
+      status: "active"
+    },
+    {
+      id: 2, 
+      name: "Kos B",
+      members: 2,
+      items: 15,
+      status: "active"
+    }
+  ];
 
   const notifications = [
     { id: 1, house: "Rumah A", message: "Beras tinggal sedikit", type: "warning" },
@@ -140,10 +90,10 @@ const Dashboard = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56">
                 {houses.map((house) => (
-                  <DropdownMenuItem key={house.id_rumah}>
-                    <Link to={`/house/${house.id_rumah}`} className="flex items-center gap-2 w-full">
+                  <DropdownMenuItem key={house.id}>
+                    <Link to={`/house/${house.id}`} className="flex items-center gap-2 w-full">
                       <Home className="w-4 h-4" />
-                      {house.nama_rumah}
+                      {house.name}
                     </Link>
                   </DropdownMenuItem>
                 ))}
@@ -236,103 +186,61 @@ const Dashboard = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Daftar Rumah/Kos</h2>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="hero" className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    Tambah Rumah/Kos Baru
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Tambah Rumah/Kos Baru</DialogTitle>
-                    <DialogDescription>
-                      Masukkan nama rumah atau kos yang ingin Anda kelola
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="house-name">Nama Rumah/Kos</Label>
-                      <Input
-                        id="house-name"
-                        placeholder="Contoh: Rumah A, Kos Mawar"
-                        value={newHouseName}
-                        onChange={(e) => setNewHouseName(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddHouse()}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                      Batal
-                    </Button>
-                    <Button onClick={handleAddHouse}>
-                      Tambah
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <Button variant="hero" className="gap-2">
+                <Plus className="w-4 h-4" />
+                Tambah Rumah/Kos Baru
+              </Button>
             </div>
 
-            {loading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Memuat data...</p>
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {houses.map((house) => (
-                  <Card key={house.id_rumah} className="feature-card cursor-pointer hover:shadow-primary transition-all duration-300">
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                          <CardTitle className="text-xl">{house.nama_rumah}</CardTitle>
-                          <CardDescription>
-                            Rumah tangga aktif
-                          </CardDescription>
-                        </div>
-                        <Badge className="bg-success/10 text-success border-success/20">
-                          Aktif
-                        </Badge>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {houses.map((house) => (
+                <Card key={house.id} className="feature-card cursor-pointer hover:shadow-primary transition-all duration-300">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <CardTitle className="text-xl">{house.name}</CardTitle>
+                        <CardDescription>
+                          Rumah tangga aktif
+                        </CardDescription>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-muted-foreground" />
-                          <span>0 Anggota</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Package className="w-4 h-4 text-muted-foreground" />
-                          <span>0 Item</span>
-                        </div>
+                      <Badge className="bg-success/10 text-success border-success/20">
+                        Aktif
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <span>{house.members} Anggota</span>
                       </div>
-                      <Link to={`/house/${house.id_rumah}`}>
-                        <Button variant="hero" className="w-full">
-                          Masuk
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                ))}
+                      <div className="flex items-center gap-2">
+                        <Package className="w-4 h-4 text-muted-foreground" />
+                        <span>{house.items} Item</span>
+                      </div>
+                    </div>
+                    <Link to={`/house/${house.id}`}>
+                      <Button variant="hero" className="w-full">
+                        Masuk
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
 
-                {/* Add New House Card */}
-                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Card className="feature-card cursor-pointer border-dashed border-2 border-muted-foreground/30 hover:border-primary transition-all duration-300">
-                      <CardContent className="flex flex-col items-center justify-center p-8 min-h-[200px]">
-                        <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-4">
-                          <Plus className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2">Tambah Rumah/Kos</h3>
-                        <p className="text-muted-foreground text-center text-sm">
-                          Buat rumah atau kos baru untuk mulai mengelola inventaris
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </DialogTrigger>
-                </Dialog>
-              </div>
-            )}
+              {/* Add New House Card */}
+              <Card className="feature-card cursor-pointer border-dashed border-2 border-muted-foreground/30 hover:border-primary transition-all duration-300">
+                <CardContent className="flex flex-col items-center justify-center p-8 min-h-[200px]">
+                  <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-4">
+                    <Plus className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Tambah Rumah/Kos</h3>
+                  <p className="text-muted-foreground text-center text-sm">
+                    Buat rumah atau kos baru untuk mulai mengelola inventaris
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* Quick Stats */}
@@ -358,7 +266,9 @@ const Dashboard = () => {
                     <Users className="w-6 h-6 text-accent" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-2xl font-bold">
+                      {houses.reduce((total, house) => total + house.members, 0)}
+                    </p>
                     <p className="text-sm text-muted-foreground">Total Anggota</p>
                   </div>
                 </div>
@@ -372,7 +282,9 @@ const Dashboard = () => {
                     <Package className="w-6 h-6 text-secondary" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-2xl font-bold">
+                      {houses.reduce((total, house) => total + house.items, 0)}
+                    </p>
                     <p className="text-sm text-muted-foreground">Total Item</p>
                   </div>
                 </div>
