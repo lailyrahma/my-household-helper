@@ -140,10 +140,10 @@ const Dashboard = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56">
                 {houses.map((house) => (
-                  <DropdownMenuItem key={house.id}>
-                    <Link to={`/house/${house.id}`} className="flex items-center gap-2 w-full">
+                  <DropdownMenuItem key={house.id_rumah}>
+                    <Link to={`/house/${house.id_rumah}`} className="flex items-center gap-2 w-full">
                       <Home className="w-4 h-4" />
-                      {house.name}
+                      {house.nama_rumah}
                     </Link>
                   </DropdownMenuItem>
                 ))}
@@ -358,9 +358,7 @@ const Dashboard = () => {
                     <Users className="w-6 h-6 text-accent" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">
-                      {houses.reduce((total, house) => total + house.members, 0)}
-                    </p>
+                    <p className="text-2xl font-bold">0</p>
                     <p className="text-sm text-muted-foreground">Total Anggota</p>
                   </div>
                 </div>
@@ -374,9 +372,7 @@ const Dashboard = () => {
                     <Package className="w-6 h-6 text-secondary" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">
-                      {houses.reduce((total, house) => total + house.items, 0)}
-                    </p>
+                    <p className="text-2xl font-bold">0</p>
                     <p className="text-sm text-muted-foreground">Total Item</p>
                   </div>
                 </div>
