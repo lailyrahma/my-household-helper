@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, User, Smartphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,6 +22,7 @@ const Register = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -32,7 +34,7 @@ const Register = () => {
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Error",
-        description: "Kata sandi tidak cocok",
+        description: "Konfirmasi kata sandi tidak cocok",
         variant: "destructive",
       });
       return;
@@ -41,7 +43,7 @@ const Register = () => {
     if (!formData.agreeToTerms) {
       toast({
         title: "Error", 
-        description: "Anda harus menyetujui Syarat & Ketentuan",
+        description: "Harap setujui Syarat & Ketentuan",
         variant: "destructive",
       });
       return;
@@ -49,15 +51,48 @@ const Register = () => {
 
     setIsLoading(true);
     
-    // Simulate registration process
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Registrasi berhasil!",
-        description: "Akun Anda telah dibuat. Silakan masuk untuk melanjutkan.",
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            display_name: formData.fullName
+          },
+          emailRedirectTo: `${window.location.origin}/`
+        }
       });
-      // In real app, redirect to login or dashboard
-    }, 1500);
+
+      if (error) {
+        if (error.message.includes("already registered") || error.message.includes("already been registered")) {
+          toast({
+            title: "Error",
+            description: "Email sudah dipakai",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Registrasi gagal",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Registrasi berhasil!",
+          description: "Akun Anda telah dibuat. Silakan masuk untuk melanjutkan.",
+        });
+        navigate("/login");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Registrasi gagal",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
