@@ -507,7 +507,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_house_admin: {
+        Args: { house_id: number; user_id: number }
+        Returns: boolean
+      }
+      is_house_member: {
+        Args: { house_id: number; user_id: number }
+        Returns: boolean
+      }
     }
     Enums: {
       anggota_status_enum: "aktif" | "nonaktif"
