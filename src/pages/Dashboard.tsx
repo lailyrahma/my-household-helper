@@ -1,6 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { AddHouseDialog } from "@/components/AddHouseDialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,12 +30,44 @@ import {
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [houses, setHouses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
       navigate('/');
+    } else {
+      fetchHouses();
     }
   }, [user, navigate]);
+
+  const fetchHouses = async () => {
+    try {
+      const { data: userData } = await supabase
+        .from('pengguna')
+        .select('id_pengguna')
+        .eq('email_pengguna', user?.email)
+        .single();
+
+      if (!userData) return;
+
+      const { data, error } = await supabase
+        .from('rumah')
+        .select(`
+          *,
+          anggota_rumah!inner(id_anggota)
+        `)
+        .or(`id_pengguna.eq.${userData.id_pengguna},anggota_rumah.id_pengguna.eq.${userData.id_pengguna}`)
+        .is('tanggal_dihapus', null);
+
+      if (error) throw error;
+      setHouses(data || []);
+    } catch (error) {
+      console.error('Error fetching houses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!user) {
     return null;
@@ -43,23 +77,6 @@ const Dashboard = () => {
     await signOut();
     navigate('/');
   };
-
-  const houses = [
-    {
-      id: 1,
-      name: "Rumah A",
-      members: 4,
-      items: 23,
-      status: "active"
-    },
-    {
-      id: 2, 
-      name: "Kos B",
-      members: 2,
-      items: 15,
-      status: "active"
-    }
-  ];
 
   const notifications = [
     { id: 1, house: "Rumah A", message: "Beras tinggal sedikit", type: "warning" },
@@ -90,18 +107,23 @@ const Dashboard = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56">
                 {houses.map((house) => (
-                  <DropdownMenuItem key={house.id}>
-                    <Link to={`/house/${house.id}`} className="flex items-center gap-2 w-full">
+                  <DropdownMenuItem key={house.id_rumah}>
+                    <Link to={`/house/${house.id_rumah}`} className="flex items-center gap-2 w-full">
                       <Home className="w-4 h-4" />
-                      {house.name}
+                      {house.nama_rumah}
                     </Link>
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Tambah Rumah
-                </DropdownMenuItem>
+                <AddHouseDialog 
+                  trigger={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Tambah Rumah
+                    </DropdownMenuItem>
+                  }
+                  onSuccess={fetchHouses}
+                />
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -186,61 +208,68 @@ const Dashboard = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Daftar Rumah/Kos</h2>
-              <Button variant="hero" className="gap-2">
-                <Plus className="w-4 h-4" />
-                Tambah Rumah/Kos Baru
-              </Button>
+              <AddHouseDialog onSuccess={fetchHouses} />
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {houses.map((house) => (
-                <Card key={house.id} className="feature-card cursor-pointer hover:shadow-primary transition-all duration-300">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="text-xl">{house.name}</CardTitle>
-                        <CardDescription>
-                          Rumah tangga aktif
-                        </CardDescription>
+            {loading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Memuat data...</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {houses.map((house) => (
+                  <Card key={house.id_rumah} className="feature-card cursor-pointer hover:shadow-primary transition-all duration-300">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <CardTitle className="text-xl">{house.nama_rumah}</CardTitle>
+                          <CardDescription>
+                            Rumah tangga aktif
+                          </CardDescription>
+                        </div>
+                        <Badge className="bg-success/10 text-success border-success/20">
+                          Aktif
+                        </Badge>
                       </div>
-                      <Badge className="bg-success/10 text-success border-success/20">
-                        Aktif
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <span>{house.members} Anggota</span>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          <span>{house.anggota_rumah?.length || 0} Anggota</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4 text-muted-foreground" />
+                          <span>0 Item</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Package className="w-4 h-4 text-muted-foreground" />
-                        <span>{house.items} Item</span>
-                      </div>
-                    </div>
-                    <Link to={`/house/${house.id}`}>
-                      <Button variant="hero" className="w-full">
-                        Masuk
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
+                      <Link to={`/house/${house.id_rumah}`}>
+                        <Button variant="hero" className="w-full">
+                          Masuk
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))}
 
-              {/* Add New House Card */}
-              <Card className="feature-card cursor-pointer border-dashed border-2 border-muted-foreground/30 hover:border-primary transition-all duration-300">
-                <CardContent className="flex flex-col items-center justify-center p-8 min-h-[200px]">
-                  <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-4">
-                    <Plus className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">Tambah Rumah/Kos</h3>
-                  <p className="text-muted-foreground text-center text-sm">
-                    Buat rumah atau kos baru untuk mulai mengelola inventaris
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+                <AddHouseDialog 
+                  trigger={
+                    <Card className="feature-card cursor-pointer border-dashed border-2 border-muted-foreground/30 hover:border-primary transition-all duration-300">
+                      <CardContent className="flex flex-col items-center justify-center p-8 min-h-[200px]">
+                        <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-4">
+                          <Plus className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">Tambah Rumah/Kos</h3>
+                        <p className="text-muted-foreground text-center text-sm">
+                          Buat rumah atau kos baru untuk mulai mengelola inventaris
+                        </p>
+                      </CardContent>
+                    </Card>
+                  }
+                  onSuccess={fetchHouses}
+                />
+              </div>
+            )}
           </div>
 
           {/* Quick Stats */}
