@@ -1,8 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { AddHouseDialog } from "@/components/AddHouseDialog";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
@@ -34,48 +32,12 @@ const HouseDashboard = () => {
   const { id } = useParams();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [houses, setHouses] = useState<any[]>([]);
-  const [currentHouse, setCurrentHouse] = useState<any>(null);
 
   useEffect(() => {
     if (!user) {
       navigate('/');
-    } else {
-      fetchHouses();
     }
-  }, [user, navigate, id]);
-
-  const fetchHouses = async () => {
-    if (!user?.email) return;
-    
-    try {
-      const { data: userData, error: userError } = await supabase
-        .from('pengguna')
-        .select('id_pengguna')
-        .eq('email_pengguna', user.email)
-        .single();
-
-      if (userError) throw userError;
-
-      const { data: housesData, error: housesError } = await supabase
-        .from('rumah')
-        .select('id_rumah, nama_rumah')
-        .or(`id_pengguna.eq.${userData.id_pengguna},id_rumah.in.(select id_rumah from anggota_rumah where id_pengguna=${userData.id_pengguna} and status='aktif')`)
-        .is('tanggal_dihapus', null);
-
-      if (housesError) throw housesError;
-
-      const formattedHouses = (housesData || []).map(h => ({
-        id: h.id_rumah.toString(),
-        name: h.nama_rumah
-      }));
-
-      setHouses(formattedHouses);
-      setCurrentHouse(formattedHouses.find(h => h.id === id) || { name: "Rumah Tidak Ditemukan" });
-    } catch (error) {
-      console.error('Error fetching houses:', error);
-    }
-  };
+  }, [user, navigate]);
 
   if (!user || !id) {
     return null;
@@ -85,6 +47,13 @@ const HouseDashboard = () => {
     await signOut();
     navigate('/');
   };
+
+  const houses = [
+    { id: "1", name: "Rumah A" },
+    { id: "2", name: "Kos B" }
+  ];
+
+  const currentHouse = houses.find(h => h.id === id) || { name: "Rumah Tidak Ditemukan" };
 
   const notifications = [
     { id: 1, house: "Rumah A", message: "Beras tinggal sedikit", type: "warning" },
@@ -155,7 +124,7 @@ const HouseDashboard = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-2">
                     <Home className="w-4 h-4" />
-                    {currentHouse?.name || "Pilih Rumah"}
+                    {currentHouse.name}
                     <ChevronDown className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -167,17 +136,8 @@ const HouseDashboard = () => {
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
-                  <AddHouseDialog 
-                    trigger={
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Tambah Rumah
-                      </DropdownMenuItem>
-                    }
-                    onSuccess={fetchHouses}
-                  />
                   <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                    <Home className="w-4 h-4 mr-2" />
+                    <Plus className="w-4 h-4 mr-2" />
                     Kelola Rumah
                   </DropdownMenuItem>
                 </DropdownMenuContent>
