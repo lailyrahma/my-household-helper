@@ -67,10 +67,10 @@ export function AddHouseDialog({ trigger, onSuccess }: AddHouseDialogProps) {
       // Insert new house
       const { data: newHouse, error: insertError } = await supabase
         .from('rumah')
-        .insert({
+        .insert([{
           nama_rumah: namaRumah.trim(),
           id_pengguna: userData.id_pengguna,
-        })
+        }])
         .select()
         .single();
 
