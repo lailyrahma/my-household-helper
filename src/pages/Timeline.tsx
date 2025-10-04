@@ -170,13 +170,13 @@ const Timeline = () => {
               <h1 className="text-xl font-bold gradient-text">StockHome</h1>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-1 sm:gap-2 text-sm">
                     <Home className="w-4 h-4" />
-                    {currentHouse.name}
-                    <ChevronDown className="w-4 h-4" />
+                    <span className="hidden sm:inline">{currentHouse.name}</span>
+                    <ChevronDown className="w-4 h-4 hidden sm:inline" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
@@ -200,10 +200,10 @@ const Timeline = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2">
+                  <Button variant="ghost" size="icon" className="sm:w-auto sm:px-4 sm:gap-2">
                     <User className="w-4 h-4" />
-                    {user.email}
-                    <ChevronDown className="w-4 h-4" />
+                    <span className="hidden lg:inline">{user.email}</span>
+                    <ChevronDown className="w-4 h-4 hidden sm:inline" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
@@ -227,15 +227,15 @@ const Timeline = () => {
 
           {/* Main Content */}
           <div className="flex-1 space-y-4 p-4 pt-6">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold">Timeline Aktivitas</h1>
-              <p className="text-muted-foreground">
+            <div className="space-y-1 sm:space-y-2">
+              <h1 className="text-2xl sm:text-3xl font-bold">Timeline Aktivitas</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Riwayat semua aktivitas di {currentHouse.name}
               </p>
             </div>
 
             {/* Stats */}
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -294,14 +294,14 @@ const Timeline = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {activities.map((activity) => (
-                    <div key={activity.id} className="flex gap-4 p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getActivityColor(activity.type)}`}>
+                    <div key={activity.id} className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${getActivityColor(activity.type)}`}>
                         {getActivityIcon(activity.type)}
                       </div>
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm">
+                      <div className="flex-1 space-y-1 min-w-0">
+                        <p className="text-xs sm:text-sm break-words">
                           <span className="font-medium">{activity.user}</span>{" "}
                           {activity.action}{" "}
                           <span className="font-medium">{activity.item}</span>
@@ -312,7 +312,7 @@ const Timeline = () => {
                             </>
                           )}
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs text-muted-foreground">
                           <span>{activity.date}</span>
                           <span>•</span>
                           <span>{activity.time}</span>

@@ -148,13 +148,13 @@ const Notifications = () => {
               <h1 className="text-xl font-bold gradient-text">StockHome</h1>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-1 sm:gap-2 text-sm">
                     <Home className="w-4 h-4" />
-                    {currentHouse.name}
-                    <ChevronDown className="w-4 h-4" />
+                    <span className="hidden sm:inline">{currentHouse.name}</span>
+                    <ChevronDown className="w-4 h-4 hidden sm:inline" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
@@ -183,10 +183,10 @@ const Notifications = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2">
+                  <Button variant="ghost" size="icon" className="sm:w-auto sm:px-4 sm:gap-2">
                     <User className="w-4 h-4" />
-                    {user.email}
-                    <ChevronDown className="w-4 h-4" />
+                    <span className="hidden lg:inline">{user.email}</span>
+                    <ChevronDown className="w-4 h-4 hidden sm:inline" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
@@ -210,20 +210,20 @@ const Notifications = () => {
 
           {/* Main Content */}
           <div className="flex-1 space-y-4 p-4 pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold">Notifikasi</h1>
-                <p className="text-muted-foreground">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-2">
+                <h1 className="text-2xl sm:text-3xl font-bold">Notifikasi</h1>
+                <p className="text-muted-foreground text-sm sm:text-base">
                   Semua pemberitahuan dan update untuk {currentHouse.name}
                 </p>
               </div>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full sm:w-auto">
                 Tandai Semua Dibaca
               </Button>
             </div>
 
             {/* Stats */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -281,32 +281,32 @@ const Notifications = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {notifications.map((notification) => (
                     <div 
                       key={notification.id}
-                      className={`flex items-start gap-4 p-4 rounded-lg transition-colors cursor-pointer ${
+                      className={`flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition-colors cursor-pointer ${
                         notification.read 
                           ? 'bg-muted/30 hover:bg-muted/50' 
                           : 'bg-muted/70 hover:bg-muted border-l-4 border-primary'
                       }`}
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${getNotificationColor(notification.type)}`}>
-                        <notification.icon className="w-5 h-5" />
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${getNotificationColor(notification.type)}`}>
+                        <notification.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="font-medium">{notification.title}</p>
+                      <div className="flex-1 space-y-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1 sm:gap-2">
+                          <p className="font-medium text-sm sm:text-base">{notification.title}</p>
                           {!notification.read && (
-                            <Badge className="bg-primary/10 text-primary border-primary/20">
+                            <Badge className="bg-primary/10 text-primary border-primary/20 text-xs w-fit">
                               Baru
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground break-words">
                           {notification.message}
                         </p>
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-2">
                           <span className="text-xs text-muted-foreground">
                             {notification.time}
                           </span>

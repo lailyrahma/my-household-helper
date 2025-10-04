@@ -80,13 +80,13 @@ const Reports = () => {
               <h1 className="text-xl font-bold gradient-text">StockHome</h1>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-1 sm:gap-2 text-sm">
                     <Home className="w-4 h-4" />
-                    {currentHouse.name}
-                    <ChevronDown className="w-4 h-4" />
+                    <span className="hidden sm:inline">{currentHouse.name}</span>
+                    <ChevronDown className="w-4 h-4 hidden sm:inline" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
@@ -110,10 +110,10 @@ const Reports = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2">
+                  <Button variant="ghost" size="icon" className="sm:w-auto sm:px-4 sm:gap-2">
                     <User className="w-4 h-4" />
-                    {user.email}
-                    <ChevronDown className="w-4 h-4" />
+                    <span className="hidden lg:inline">{user.email}</span>
+                    <ChevronDown className="w-4 h-4 hidden sm:inline" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
@@ -137,27 +137,27 @@ const Reports = () => {
 
           {/* Main Content */}
           <div className="flex-1 space-y-4 p-4 pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold">Laporan & Insight</h1>
-                <p className="text-muted-foreground">
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-2">
+                <h1 className="text-2xl sm:text-3xl font-bold">Laporan & Insight</h1>
+                <p className="text-muted-foreground text-sm sm:text-base">
                   Analisis penggunaan dan pengeluaran {currentHouse.name}
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" className="gap-2 w-full sm:w-auto">
                   <Calendar className="w-4 h-4" />
-                  Pilih Periode
+                  <span>Pilih Periode</span>
                 </Button>
-                <Button className="gap-2">
+                <Button className="gap-2 w-full sm:w-auto">
                   <Download className="w-4 h-4" />
-                  Export PDF
+                  <span>Export PDF</span>
                 </Button>
               </div>
             </div>
 
             {/* Monthly Overview */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -204,7 +204,7 @@ const Reports = () => {
               </Card>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
               {/* Monthly Breakdown */}
               <Card>
                 <CardHeader>

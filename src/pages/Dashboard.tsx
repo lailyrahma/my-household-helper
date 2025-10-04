@@ -78,14 +78,14 @@ const Dashboard = () => {
             <h1 className="text-2xl font-bold gradient-text">StockHome</h1>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2">
             {/* House Selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-1 sm:gap-2 text-sm">
                   <Home className="w-4 h-4" />
                   <span className="hidden sm:inline">Pilih Rumah</span>
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-4 h-4 hidden sm:inline" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56">
@@ -145,10 +145,10 @@ const Dashboard = () => {
             {/* Profile Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2">
+                  <Button variant="ghost" size="icon" className="sm:w-auto sm:px-4 sm:gap-2">
                     <User className="w-4 h-4" />
-                    <span className="hidden md:inline">{user.email}</span>
-                    <ChevronDown className="w-4 h-4" />
+                    <span className="hidden lg:inline">{user.email}</span>
+                    <ChevronDown className="w-4 h-4 hidden sm:inline" />
                   </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
@@ -176,24 +176,23 @@ const Dashboard = () => {
         <div className="space-y-8">
           {/* Welcome Section */}
           <div className="space-y-4">
-            <h1 className="text-3xl font-bold">Selamat Datang di StockHome</h1>
-            <p className="text-muted-foreground text-lg">
+            <h1 className="text-2xl sm:text-3xl font-bold">Selamat Datang di StockHome</h1>
+            <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">
               Pilih atau buat rumah/kos untuk mulai mengelola inventaris Anda
             </p>
           </div>
 
           {/* Houses Grid */}
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h2 className="text-2xl font-semibold">Daftar Rumah/Kos</h2>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+              <h2 className="text-xl sm:text-2xl font-semibold">Daftar Rumah/Kos</h2>
               <Button variant="hero" className="gap-2 w-full sm:w-auto">
                 <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Tambah Rumah/Kos Baru</span>
-                <span className="sm:hidden">Tambah Rumah</span>
+                <span>Tambah Rumah/Kos</span>
               </Button>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {houses.map((house) => (
                 <Card key={house.id} className="feature-card cursor-pointer hover:shadow-primary transition-all duration-300">
                   <CardHeader>
@@ -245,7 +244,7 @@ const Dashboard = () => {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">

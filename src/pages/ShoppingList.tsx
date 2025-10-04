@@ -192,14 +192,14 @@ const ShoppingList = () => {
               <h1 className="text-xl font-bold gradient-text">StockHome</h1>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {/* House Selector */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-1 sm:gap-2 text-sm">
                     <Home className="w-4 h-4" />
-                    {currentHouse.name}
-                    <ChevronDown className="w-4 h-4" />
+                    <span className="hidden sm:inline">{currentHouse.name}</span>
+                    <ChevronDown className="w-4 h-4 hidden sm:inline" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
@@ -249,10 +249,10 @@ const ShoppingList = () => {
               {/* Profile Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2">
+                  <Button variant="ghost" size="icon" className="sm:w-auto sm:px-4 sm:gap-2">
                     <User className="w-4 h-4" />
-                    {user.email}
-                    <ChevronDown className="w-4 h-4" />
+                    <span className="hidden lg:inline">{user.email}</span>
+                    <ChevronDown className="w-4 h-4 hidden sm:inline" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
@@ -277,29 +277,29 @@ const ShoppingList = () => {
           {/* Main Content */}
           <div className="flex-1 space-y-4 p-4 pt-6">
             {/* Page Header */}
-            <div className="flex justify-between items-center">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold">Daftar Belanja</h1>
-                <p className="text-muted-foreground">
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="space-y-1 sm:space-y-2">
+                <h1 className="text-2xl sm:text-3xl font-bold">Daftar Belanja</h1>
+                <p className="text-muted-foreground text-sm sm:text-base">
                   Kelola barang yang perlu dibeli untuk {currentHouse.name}
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" className="gap-2 w-full sm:w-auto">
                   <Download className="w-4 h-4" />
-                  Export PDF
+                  <span>Export PDF</span>
                 </Button>
-                <Button className="gap-2">
+                <Button className="gap-2 w-full sm:w-auto">
                   <Plus className="w-4 h-4" />
-                  Tambah Barang
+                  <span>Tambah Barang</span>
                 </Button>
               </div>
             </div>
 
             {/* Search and Filters */}
             <Card>
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row gap-4">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col gap-3">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -309,13 +309,14 @@ const ShoppingList = () => {
                       className="pl-10"
                     />
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="gap-2">
-                        <Filter className="w-4 h-4" />
-                        Kategori: {filterCategory}
-                      </Button>
-                    </DropdownMenuTrigger>
+                  <div className="flex gap-2 overflow-x-auto pb-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="gap-2 whitespace-nowrap text-sm">
+                          <Filter className="w-4 h-4" />
+                          <span className="hidden sm:inline">Kategori: </span>{filterCategory}
+                        </Button>
+                      </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       {categories.map((category) => (
                         <DropdownMenuItem 
@@ -327,13 +328,13 @@ const ShoppingList = () => {
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="gap-2">
-                        <Filter className="w-4 h-4" />
-                        Status: {filterStatus}
-                      </Button>
-                    </DropdownMenuTrigger>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="gap-2 whitespace-nowrap text-sm">
+                          <Filter className="w-4 h-4" />
+                          <span className="hidden sm:inline">Status: </span>{filterStatus}
+                        </Button>
+                      </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       {statuses.map((status) => (
                         <DropdownMenuItem 
@@ -344,14 +345,14 @@ const ShoppingList = () => {
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
-                  </DropdownMenu>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="gap-2">
-                        <Filter className="w-4 h-4" />
-                        Sumber: {filterSource}
-                      </Button>
-                    </DropdownMenuTrigger>
+                    </DropdownMenu>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="gap-2 whitespace-nowrap text-sm">
+                          <Filter className="w-4 h-4" />
+                          <span className="hidden sm:inline">Sumber: </span>{filterSource}
+                        </Button>
+                      </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       {sources.map((source) => (
                         <DropdownMenuItem 
@@ -362,7 +363,8 @@ const ShoppingList = () => {
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
-                  </DropdownMenu>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </CardContent>
             </Card>
