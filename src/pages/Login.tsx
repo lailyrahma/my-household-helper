@@ -113,6 +113,8 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10"
+                    minLength={6}
+                    maxLength={72}
                     required
                   />
                   <button
@@ -123,6 +125,9 @@ const Login = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Kata sandi minimal 6 karakter, maksimal 72 karakter
+                </p>
               </div>
 
               <div className="flex items-center justify-between">

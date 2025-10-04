@@ -78,13 +78,13 @@ const Dashboard = () => {
             <h1 className="text-2xl font-bold gradient-text">StockHome</h1>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* House Selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2">
                   <Home className="w-4 h-4" />
-                  Pilih Rumah
+                  <span className="hidden sm:inline">Pilih Rumah</span>
                   <ChevronDown className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -147,7 +147,7 @@ const Dashboard = () => {
               <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="gap-2">
                     <User className="w-4 h-4" />
-                    {user.email}
+                    <span className="hidden md:inline">{user.email}</span>
                     <ChevronDown className="w-4 h-4" />
                   </Button>
               </DropdownMenuTrigger>
@@ -184,11 +184,12 @@ const Dashboard = () => {
 
           {/* Houses Grid */}
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-2xl font-semibold">Daftar Rumah/Kos</h2>
-              <Button variant="hero" className="gap-2">
+              <Button variant="hero" className="gap-2 w-full sm:w-auto">
                 <Plus className="w-4 h-4" />
-                Tambah Rumah/Kos Baru
+                <span className="hidden sm:inline">Tambah Rumah/Kos Baru</span>
+                <span className="sm:hidden">Tambah Rumah</span>
               </Button>
             </div>
 

@@ -65,11 +65,11 @@ const Profile = () => {
                 Ubah foto profil Anda
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex items-center gap-6">
+            <CardContent className="flex flex-col sm:flex-row items-center gap-6">
               <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
                 <User className="w-12 h-12 text-primary" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 text-center sm:text-left">
                 <Button variant="outline">Pilih Foto</Button>
                 <p className="text-xs text-muted-foreground">
                   Format: JPG, PNG. Maksimal 2MB
@@ -124,12 +124,12 @@ const Profile = () => {
                 />
               </div>
 
-              <div className="flex gap-2">
-                <Button className="gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button className="gap-2 w-full sm:w-auto">
                   <Save className="w-4 h-4" />
                   Simpan Perubahan
                 </Button>
-                <Button variant="outline" onClick={() => navigate(-1)}>
+                <Button variant="outline" onClick={() => navigate(-1)} className="w-full sm:w-auto">
                   Batal
                 </Button>
               </div>
@@ -160,7 +160,12 @@ const Profile = () => {
                   id="new-password" 
                   type="password"
                   placeholder="Masukkan password baru"
+                  minLength={6}
+                  maxLength={72}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Kata sandi minimal 6 karakter, maksimal 72 karakter
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -169,6 +174,8 @@ const Profile = () => {
                   id="confirm-password" 
                   type="password"
                   placeholder="Konfirmasi password baru"
+                  minLength={6}
+                  maxLength={72}
                 />
               </div>
 

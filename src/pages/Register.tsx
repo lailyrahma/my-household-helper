@@ -31,6 +31,15 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (formData.password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Kata sandi minimal 6 karakter",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Error",
@@ -164,6 +173,8 @@ const Register = () => {
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
                     className="pl-10 pr-10"
+                    minLength={6}
+                    maxLength={72}
                     required
                   />
                   <button
@@ -174,6 +185,9 @@ const Register = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Kata sandi minimal 6 karakter, maksimal 72 karakter
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -187,6 +201,8 @@ const Register = () => {
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                     className="pl-10 pr-10"
+                    minLength={6}
+                    maxLength={72}
                     required
                   />
                   <button
