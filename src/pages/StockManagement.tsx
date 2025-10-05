@@ -264,7 +264,7 @@ const StockManagement = () => {
           {/* Main Content */}
           <div className="flex-1 space-y-4 p-4 pt-6">
             {/* Page Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+            <div className="flex flex-col gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2">
                 <h1 className="text-2xl sm:text-3xl font-bold">Stok Barang</h1>
                 <p className="text-muted-foreground text-sm sm:text-base">
@@ -332,8 +332,8 @@ const StockManagement = () => {
               </CardContent>
             </Card>
 
-            {/* Stock Table */}
-            <Card>
+            {/* Stock Table - Desktop */}
+            <Card className="hidden md:block">
               <CardHeader>
                 <CardTitle>Daftar Stok Barang</CardTitle>
                 <CardDescription>
@@ -405,6 +405,66 @@ const StockManagement = () => {
                 </Table>
               </CardContent>
             </Card>
+
+            {/* Stock Cards - Mobile */}
+            <div className="md:hidden space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <p className="text-sm text-muted-foreground">
+                  Menampilkan {filteredItems.length} dari {stockItems.length} item
+                </p>
+              </div>
+              {filteredItems.map((item) => (
+                <Card key={item.id}>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-base">{item.name}</h3>
+                        <Badge variant="outline" className="mt-1">{item.category}</Badge>
+                      </div>
+                      <Badge className={getStatusColor(item.status)}>
+                        {getStatusIcon(item.status)}
+                        <span className="ml-1">{item.status}</span>
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Jumlah</p>
+                        <p className="font-medium">{item.stock} {item.unit}</p>
+                        <p className="text-xs text-muted-foreground">Min: {item.threshold} {item.unit}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Kadaluarsa</p>
+                        <p className="font-medium">
+                          {item.expiry ? new Date(item.expiry).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}
+                        </p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-muted-foreground text-xs">Estimasi Habis</p>
+                        <p className="font-medium">
+                          {new Date(item.estimatedEmpty).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2 border-t">
+                      <Button size="sm" variant="outline" className="flex-1 gap-2">
+                        <Edit className="w-4 h-4" />
+                        <span className="text-xs">Edit</span>
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-1 gap-2">
+                        <Trash2 className="w-4 h-4" />
+                        <span className="text-xs">Hapus</span>
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-1 gap-2">
+                        <ShoppingCart className="w-4 h-4" />
+                        <span className="text-xs">Belanja</span>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </SidebarInset>
       </div>

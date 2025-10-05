@@ -277,7 +277,7 @@ const ShoppingList = () => {
           {/* Main Content */}
           <div className="flex-1 space-y-4 p-4 pt-6">
             {/* Page Header */}
-            <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex flex-col gap-3">
               <div className="space-y-1 sm:space-y-2">
                 <h1 className="text-2xl sm:text-3xl font-bold">Daftar Belanja</h1>
                 <p className="text-muted-foreground text-sm sm:text-base">
@@ -372,27 +372,29 @@ const ShoppingList = () => {
             {/* Bulk Actions */}
             {selectedItems.length > 0 && (
               <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <span className="text-sm text-muted-foreground">
                       {selectedItems.length} item dipilih
                     </span>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full sm:w-auto">
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => handleBulkAction('markBought')}
+                        className="flex-1 sm:flex-none gap-2"
                       >
-                        <Check className="w-4 h-4 mr-2" />
-                        Tandai Dibeli
+                        <Check className="w-4 h-4" />
+                        <span className="text-xs sm:text-sm">Tandai Dibeli</span>
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => handleBulkAction('delete')}
+                        className="flex-1 sm:flex-none gap-2"
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Hapus
+                        <Trash2 className="w-4 h-4" />
+                        <span className="text-xs sm:text-sm">Hapus</span>
                       </Button>
                     </div>
                   </div>
@@ -403,10 +405,10 @@ const ShoppingList = () => {
             {/* Shopping List */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <CardTitle>Daftar Belanja</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="text-lg sm:text-xl">Daftar Belanja</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
                       Menampilkan {filteredItems.length} dari {shoppingItems.length} item
                     </CardDescription>
                   </div>
@@ -416,61 +418,62 @@ const ShoppingList = () => {
                       checked={selectedItems.length === filteredItems.length && filteredItems.length > 0}
                       onCheckedChange={handleSelectAll}
                     />
-                    <label htmlFor="select-all" className="text-sm">
+                    <label htmlFor="select-all" className="text-xs sm:text-sm cursor-pointer">
                       Pilih Semua
                     </label>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {filteredItems.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg">
+                    <div key={item.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 border rounded-lg">
                       <Checkbox
                         checked={selectedItems.includes(item.id)}
                         onCheckedChange={(checked) => handleItemSelect(item.id, checked as boolean)}
+                        className="self-start sm:self-center"
                       />
                       
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium">{item.name}</h3>
-                          <div className="flex gap-2">
-                            <Badge className={getSourceColor(item.source)}>
+                      <div className="flex-1 space-y-2 sm:space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <h3 className="font-medium text-base">{item.name}</h3>
+                          <div className="flex gap-2 flex-wrap">
+                            <Badge className={`${getSourceColor(item.source)} text-xs`}>
                               {item.source}
                             </Badge>
-                            <Badge className={getStatusColor(item.status)}>
+                            <Badge className={`${getStatusColor(item.status)} text-xs`}>
                               {item.status}
                             </Badge>
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                        <div className="grid grid-cols-2 gap-3 text-sm">
                           <div>
-                            <span className="text-muted-foreground">Kategori:</span>
-                            <p>{item.category}</p>
+                            <span className="text-muted-foreground text-xs">Kategori:</span>
+                            <p className="text-sm">{item.category}</p>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Jumlah:</span>
-                            <p className="font-medium">{item.quantity} {item.unit}</p>
+                            <span className="text-muted-foreground text-xs">Jumlah:</span>
+                            <p className="font-medium text-sm">{item.quantity} {item.unit}</p>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Kadaluarsa:</span>
-                            <p>
+                            <span className="text-muted-foreground text-xs">Kadaluarsa:</span>
+                            <p className="text-sm">
                               {item.expiry ? (
                                 <span className="flex items-center gap-1">
                                   <Calendar className="w-3 h-3" />
-                                  {new Date(item.expiry).toLocaleDateString('id-ID')}
+                                  {new Date(item.expiry).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                                 </span>
                               ) : '-'}
                             </p>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Estimasi Habis:</span>
-                            <p>
+                            <span className="text-muted-foreground text-xs">Estimasi Habis:</span>
+                            <p className="text-sm">
                               {item.estimatedEmpty ? (
                                 <span className="flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
-                                  {new Date(item.estimatedEmpty).toLocaleDateString('id-ID')}
+                                  {new Date(item.estimatedEmpty).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                                 </span>
                               ) : '-'}
                             </p>
@@ -478,27 +481,31 @@ const ShoppingList = () => {
                         </div>
                         
                         {item.note && (
-                          <div>
-                            <span className="text-muted-foreground text-sm">Catatan:</span>
+                          <div className="pt-1">
+                            <span className="text-muted-foreground text-xs">Catatan:</span>
                             <p className="text-sm">{item.note}</p>
                           </div>
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-2">
+                      <div className="flex sm:flex-col gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l sm:pl-3">
                         <Button 
                           size="sm" 
                           variant="outline"
                           onClick={() => handleMarkAsBought(item.id)}
                           disabled={item.status === "Sudah Dibeli"}
+                          className="flex-1 sm:flex-none gap-1"
                         >
                           <Check className="w-4 h-4" />
+                          <span className="text-xs sm:hidden">Beli</span>
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" className="flex-1 sm:flex-none gap-1">
                           <Edit className="w-4 h-4" />
+                          <span className="text-xs sm:hidden">Edit</span>
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" className="flex-1 sm:flex-none gap-1">
                           <Trash2 className="w-4 h-4" />
+                          <span className="text-xs sm:hidden">Hapus</span>
                         </Button>
                       </div>
                     </div>
@@ -510,24 +517,24 @@ const ShoppingList = () => {
             {/* Integration Section */}
             <Card>
               <CardHeader>
-                <CardTitle>Integrasi Belanja</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-lg sm:text-xl">Integrasi Belanja</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Belanja barang yang dipilih melalui platform marketplace
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <Button variant="outline" className="h-20 flex-col gap-2">
-                    <ShoppingCart className="w-6 h-6" />
-                    Shopee
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  <Button variant="outline" className="h-16 sm:h-20 flex-col gap-2">
+                    <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span className="text-sm sm:text-base">Shopee</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex-col gap-2">
-                    <ShoppingCart className="w-6 h-6" />
-                    Tokopedia
+                  <Button variant="outline" className="h-16 sm:h-20 flex-col gap-2">
+                    <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span className="text-sm sm:text-base">Tokopedia</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex-col gap-2">
-                    <ShoppingCart className="w-6 h-6" />
-                    Toko Terdekat
+                  <Button variant="outline" className="h-16 sm:h-20 flex-col gap-2">
+                    <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span className="text-sm sm:text-base">Toko Terdekat</span>
                   </Button>
                 </div>
               </CardContent>
