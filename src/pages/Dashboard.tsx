@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,16 +24,125 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [houses, setHouses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newHouse, setNewHouse] = useState({ nama_rumah: "", deskripsi: "" });
 
   useEffect(() => {
     if (!user) {
       navigate('/');
+    } else {
+      fetchHouses();
     }
   }, [user, navigate]);
+
+  const fetchHouses = async () => {
+    try {
+      setLoading(true);
+      const { data: housesData, error } = await supabase
+        .from('rumah')
+        .select('*')
+        .eq('user_id', user?.id)
+        .is('tanggal_dihapus', null)
+        .order('tanggal_dibuat', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch counts separately
+      const housesWithCounts = await Promise.all(
+        (housesData || []).map(async (house) => {
+          const { count: membersCount } = await supabase
+            .from('anggota_rumah')
+            .select('*', { count: 'exact', head: true })
+            .eq('id_rumah', house.id_rumah)
+            .is('tanggal_dihapus', null);
+
+          const { count: itemsCount } = await supabase
+            .from('barang')
+            .select('*', { count: 'exact', head: true })
+            .eq('id_rumah', house.id_rumah)
+            .is('tanggal_dihapus', null);
+
+          return {
+            id: house.id_rumah,
+            name: house.nama_rumah,
+            description: house.deskripsi,
+            status: house.status,
+            members: membersCount || 0,
+            items: itemsCount || 0,
+          };
+        })
+      );
+
+      setHouses(housesWithCounts);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateHouse = async () => {
+    if (!newHouse.nama_rumah.trim()) {
+      toast({
+        title: "Error",
+        description: "Nama rumah/kos harus diisi",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('rumah')
+        .insert({
+          user_id: user?.id,
+          nama_rumah: newHouse.nama_rumah,
+          deskripsi: newHouse.deskripsi,
+          status: 'aktif'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Berhasil",
+        description: "Rumah/kos baru berhasil ditambahkan"
+      });
+
+      setIsDialogOpen(false);
+      setNewHouse({ nama_rumah: "", deskripsi: "" });
+      fetchHouses();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
 
   if (!user) {
     return null;
@@ -43,23 +152,6 @@ const Dashboard = () => {
     await signOut();
     navigate('/');
   };
-
-  const houses = [
-    {
-      id: 1,
-      name: "Rumah A",
-      members: 4,
-      items: 23,
-      status: "active"
-    },
-    {
-      id: 2, 
-      name: "Kos B",
-      members: 2,
-      items: 15,
-      status: "active"
-    }
-  ];
 
   const notifications = [
     { id: 1, house: "Rumah A", message: "Beras tinggal sedikit", type: "warning" },
@@ -186,61 +278,106 @@ const Dashboard = () => {
           <div className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
               <h2 className="text-xl sm:text-2xl font-semibold">Daftar Rumah/Kos</h2>
-              <Button variant="hero" className="gap-2 w-full sm:w-auto">
-                <Plus className="w-4 h-4" />
-                <span>Tambah Rumah/Kos</span>
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {houses.map((house) => (
-                <Card key={house.id} className="feature-card cursor-pointer hover:shadow-primary transition-all duration-300">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="text-xl">{house.name}</CardTitle>
-                        <CardDescription>
-                          Rumah tangga aktif
-                        </CardDescription>
-                      </div>
-                      <Badge className="bg-success/10 text-success border-success/20">
-                        Aktif
-                      </Badge>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="hero" className="gap-2 w-full sm:w-auto">
+                    <Plus className="w-4 h-4" />
+                    <span>Tambah Rumah/Kos</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Tambah Rumah/Kos Baru</DialogTitle>
+                    <DialogDescription>
+                      Buat rumah atau kos baru untuk mulai mengelola inventaris
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="nama">Nama Rumah/Kos *</Label>
+                      <Input
+                        id="nama"
+                        placeholder="Contoh: Rumah Keluarga"
+                        value={newHouse.nama_rumah}
+                        onChange={(e) => setNewHouse({ ...newHouse, nama_rumah: e.target.value })}
+                      />
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <span>{house.members} Anggota</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Package className="w-4 h-4 text-muted-foreground" />
-                        <span>{house.items} Item</span>
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="deskripsi">Deskripsi (Opsional)</Label>
+                      <Textarea
+                        id="deskripsi"
+                        placeholder="Tambahkan deskripsi..."
+                        value={newHouse.deskripsi}
+                        onChange={(e) => setNewHouse({ ...newHouse, deskripsi: e.target.value })}
+                      />
                     </div>
-                    <Link to={`/house/${house.id}`}>
-                      <Button variant="hero" className="w-full">
-                        Masuk
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-
-              {/* Add New House Card */}
-              <Card className="feature-card cursor-pointer border-dashed border-2 border-muted-foreground/30 hover:border-primary transition-all duration-300">
-                <CardContent className="flex flex-col items-center justify-center p-8 min-h-[200px]">
-                  <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-4">
-                    <Plus className="w-8 h-8 text-muted-foreground" />
+                    <Button onClick={handleCreateHouse} className="w-full" variant="hero">
+                      Buat Rumah/Kos
+                    </Button>
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">Tambah Rumah/Kos</h3>
-                  <p className="text-muted-foreground text-center text-sm">
-                    Buat rumah atau kos baru untuk mulai mengelola inventaris
-                  </p>
-                </CardContent>
-              </Card>
+                </DialogContent>
+              </Dialog>
             </div>
+
+            {loading ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Memuat data...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {houses.map((house) => (
+                  <Card key={house.id} className="feature-card cursor-pointer hover:shadow-primary transition-all duration-300">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <CardTitle className="text-xl">{house.name}</CardTitle>
+                          <CardDescription>
+                            {house.description || "Rumah tangga aktif"}
+                          </CardDescription>
+                        </div>
+                        <Badge className={house.status === 'aktif' ? "bg-success/10 text-success border-success/20" : "bg-muted text-muted-foreground"}>
+                          {house.status === 'aktif' ? 'Aktif' : 'Non-aktif'}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          <span>{house.members} Anggota</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4 text-muted-foreground" />
+                          <span>{house.items} Item</span>
+                        </div>
+                      </div>
+                      <Link to={`/house/${house.id}`}>
+                        <Button variant="hero" className="w-full">
+                          Masuk
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {/* Add New House Card */}
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Card className="feature-card cursor-pointer border-dashed border-2 border-muted-foreground/30 hover:border-primary transition-all duration-300">
+                      <CardContent className="flex flex-col items-center justify-center p-8 min-h-[200px]">
+                        <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-4">
+                          <Plus className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">Tambah Rumah/Kos</h3>
+                        <p className="text-muted-foreground text-center text-sm">
+                          Buat rumah atau kos baru untuk mulai mengelola inventaris
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </DialogTrigger>
+                </Dialog>
+              </div>
+            )}
           </div>
 
           {/* Quick Stats */}
