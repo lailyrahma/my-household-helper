@@ -58,6 +58,7 @@ const Dashboard = () => {
   const fetchHouses = async () => {
     try {
       setLoading(true);
+      // @ts-ignore - Types will regenerate after migration
       const { data: housesData, error } = await supabase
         .from('rumah')
         .select('*')
@@ -85,8 +86,8 @@ const Dashboard = () => {
           return {
             id: house.id_rumah,
             name: house.nama_rumah,
-            description: house.deskripsi,
-            status: house.status,
+            description: (house as any).deskripsi,
+            status: (house as any).status,
             members: membersCount || 0,
             items: itemsCount || 0,
           };
@@ -116,14 +117,16 @@ const Dashboard = () => {
     }
 
     try {
+      const newHouseData: any = {
+        user_id: user?.id,
+        nama_rumah: newHouse.nama_rumah,
+        deskripsi: newHouse.deskripsi,
+        status: 'aktif'
+      };
+      
       const { error } = await supabase
         .from('rumah')
-        .insert({
-          user_id: user?.id,
-          nama_rumah: newHouse.nama_rumah,
-          deskripsi: newHouse.deskripsi,
-          status: 'aktif'
-        });
+        .insert(newHouseData);
 
       if (error) throw error;
 
