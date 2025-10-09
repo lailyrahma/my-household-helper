@@ -122,15 +122,13 @@ const StockManagement = () => {
         .is('tanggal_dihapus', null);
       
       if (error) {
-        console.error('Gagal Mengambil Kategori:', error);
+        console.error('Error fetching categories:', error);
       } else {
         setCategories(data || []);
       }
     };
     fetchCategories();
   }, []);
-
-    console.log("Daftar kategori:", categories)
 
   // Fetch stock items with real-time updates
   useEffect(() => {
