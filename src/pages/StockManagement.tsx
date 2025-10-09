@@ -118,7 +118,7 @@ const StockManagement = () => {
     const fetchCategories = async () => {
       const { data, error } = await supabase
         .from('kategori_produk')
-        .select('nama_kategori')
+        .select('id_kategori, nama_kategori')
         .is('tanggal_dihapus', null);
       
       if (error) {
@@ -698,21 +698,19 @@ const StockManagement = () => {
                   </div>
                   <div>
                     <Label htmlFor="kategori">Kategori *</Label>
-                    <Select 
-                      value={formData.id_kategori} 
-                      onValueChange={(value) => setFormData({ ...formData, id_kategori: value })}
-                    >
+                    <Select value={formData.id_kategori} onValueChange={(value) => setFormData({ ...formData, id_kategori: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Pilih kategori" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id_kategori} value={category.id_kategori.toString()}>
-                            {category.nama_kategori}
+                        {categories.map((kategori) => (
+                          <SelectItem key={kategori.id_kategori} value={kategori.id_kategori.toString()}>
+                            {kategori.nama_kategori}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+
                     </div>
 
                     <div>
