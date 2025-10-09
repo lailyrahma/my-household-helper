@@ -97,10 +97,8 @@ const StockManagement = () => {
     { id: 2, house: "Rumah B", message: "Minyak goreng sudah dibeli oleh Rani", type: "success" }
   ];
 
-  // Log activity to aktivitas table
   const logActivity = async (aksi: string, deskripsi: string, id_barang?: number) => {
     try {
-      // @ts-ignore - aktivitas table not in types yet
       await supabase.from('aktivitas').insert({
         id_rumah: parseInt(id),
         id_barang,
@@ -113,28 +111,21 @@ const StockManagement = () => {
     }
   };
 
-  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       const { data, error } = await supabase
         .from('kategori_produk')
-        .select('nama_kategori')
+        .select('id_kategori, nama_kategori')
         .is('tanggal_dihapus', null);
       
-      if (error) {
-        console.error('Error fetching categories:', error);
-      } else {
-        setCategories(data || []);
-      }
+      if (!error && data) setCategories(data);
     };
     fetchCategories();
   }, []);
 
-  // Fetch stock items with real-time updates
   useEffect(() => {
     const fetchStockItems = async () => {
       setLoading(true);
-      // @ts-ignore
       const { data, error } = await supabase
         .from('barang')
         .select(`
@@ -148,22 +139,12 @@ const StockManagement = () => {
         .is('tanggal_dihapus', null)
         .order('tanggal_dibuat', { ascending: false });
       
-      if (error) {
-        console.error('Error fetching stock items:', error);
-        toast({
-          title: "Error",
-          description: "Gagal memuat data stok barang",
-          variant: "destructive"
-        });
-      } else {
-        setStockItems(data || []);
-      }
+      if (!error && data) setStockItems(data);
       setLoading(false);
     };
 
     fetchStockItems();
 
-    // Subscribe to real-time changes
     const channel = supabase
       .channel('stock-changes')
       .on('postgres_changes', {
@@ -176,12 +157,9 @@ const StockManagement = () => {
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => supabase.removeChannel(channel);
   }, [id, toast]);
 
-  // Add item handler
   const handleAddItem = async () => {
     if (!formData.nama_barang || !formData.id_kategori || !formData.satuan) {
       toast({
@@ -192,7 +170,6 @@ const StockManagement = () => {
       return;
     }
 
-    // @ts-ignore - barang table fields
     const { error } = await supabase.from('barang').insert({
       id_rumah: parseInt(id),
       user_id: user.id,
@@ -207,18 +184,14 @@ const StockManagement = () => {
     } as any);
 
     if (error) {
-      console.error('Error adding item:', error);
       toast({
         title: "Error",
         description: "Gagal menambahkan barang",
         variant: "destructive"
       });
     } else {
-      toast({
-        title: "Berhasil",
-        description: "Barang berhasil ditambahkan"
-      });
-      await logActivity('Tambah', `Menambahkan barang baru: ${formData.nama_barang} (${formData.stok} ${formData.satuan})`);
+      toast({ title: "Berhasil", description: "Barang berhasil ditambahkan" });
+      await logActivity('Tambah', `Menambahkan barang baru: ${formData.nama_barang}`);
       setAddDialogOpen(false);
       setFormData({
         nama_barang: "",
@@ -232,13 +205,11 @@ const StockManagement = () => {
     }
   };
 
-  // Edit item handler
   const handleEditItem = async () => {
     if (!selectedItem) return;
 
     const newStatus = formData.stok === 0 ? "Habis" : formData.stok <= formData.ambang_batas ? "Hampir Habis" : "Cukup";
 
-    // @ts-ignore
     const { error } = await supabase.from('barang').update({
       nama_barang: formData.nama_barang,
       id_kategori: parseInt(formData.id_kategori),
@@ -252,49 +223,28 @@ const StockManagement = () => {
     } as any).eq('id_barang', selectedItem.id_barang);
 
     if (error) {
-      console.error('Error updating item:', error);
-      toast({
-        title: "Error",
-        description: "Gagal mengupdate barang",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Gagal mengupdate barang", variant: "destructive" });
     } else {
-      toast({
-        title: "Berhasil",
-        description: "Barang berhasil diupdate"
-      });
-      await logActivity('Update', `Memperbarui stok ${formData.nama_barang} menjadi ${formData.stok} ${formData.satuan}`, selectedItem.id_barang);
+      toast({ title: "Berhasil", description: "Barang berhasil diupdate" });
+      await logActivity('Update', `Memperbarui stok ${formData.nama_barang}`, selectedItem.id_barang);
       setEditDialogOpen(false);
       setSelectedItem(null);
     }
   };
 
-  // Delete item handler
   const handleDeleteItem = async (item: any) => {
     if (!confirm(`Apakah Anda yakin ingin menghapus ${item.nama_barang}?`)) return;
 
-    // @ts-ignore
     const { error } = await supabase.from('barang').update({
       tanggal_dihapus: new Date().toISOString()
     } as any).eq('id_barang', item.id_barang);
 
-    if (error) {
-      console.error('Error deleting item:', error);
-      toast({
-        title: "Error",
-        description: "Gagal menghapus barang",
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Berhasil",
-        description: "Barang berhasil dihapus"
-      });
-      await logActivity('Hapus', `Menghapus barang ${item.nama_barang} dari daftar stok`, item.id_barang);
+    if (!error) {
+      toast({ title: "Berhasil", description: "Barang berhasil dihapus" });
+      await logActivity('Hapus', `Menghapus barang ${item.nama_barang}`, item.id_barang);
     }
   };
 
-  // Open edit dialog
   const openEditDialog = (item: any) => {
     setSelectedItem(item);
     setFormData({
