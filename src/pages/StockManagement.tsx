@@ -118,7 +118,7 @@ const StockManagement = () => {
     const fetchCategories = async () => {
       const { data, error } = await supabase
         .from('kategori_produk')
-        .select('*')
+        .select('nama_kategori')
         .is('tanggal_dihapus', null);
       
       if (error) {
@@ -136,7 +136,7 @@ const StockManagement = () => {
       setLoading(true);
       // @ts-ignore
       const { data, error } = await supabase
-        .from('kategori_produk')
+        .from('barang')
         .select(`
           *,
           kategori_produk (
