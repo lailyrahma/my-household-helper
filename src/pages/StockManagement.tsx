@@ -699,83 +699,86 @@ const StockManagement = () => {
                   <div>
                     <Label htmlFor="kategori">Kategori *</Label>
                     <Select 
-                        value={formData.id_kategori} 
-                        onValueChange={(value) => setFormData({ ...formData, id_kategori: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih kategori" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id_kategori} value={category.id_kategori.toString()}>
-                              {category.nama_kategori}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                      value={formData.id_kategori} 
+                      onValueChange={(value) => setFormData({ ...formData, id_kategori: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih kategori" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id_kategori} value={category.id_kategori.toString()}>
+                            {category.nama_kategori}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    </div>
+
                     <div>
-                      <Label htmlFor="stok">Stok *</Label>
+                      <Label htmlFor="stok">Jumlah Stok</Label>
                       <Input
                         id="stok"
                         type="number"
                         value={formData.stok}
-                        onChange={(e) => setFormData({...formData, stok: parseInt(e.target.value) || 0})}
+                        onChange={(e) => setFormData({ ...formData, stok: Number(e.target.value) })}
                         placeholder="0"
                       />
                     </div>
+
                     <div>
                       <Label htmlFor="satuan">Satuan *</Label>
                       <Input
                         id="satuan"
                         value={formData.satuan}
-                        onChange={(e) => setFormData({...formData, satuan: e.target.value})}
-                        placeholder="kg, pcs, dll"
+                        onChange={(e) => setFormData({ ...formData, satuan: e.target.value })}
+                        placeholder="Contoh: kg, liter, bungkus"
                       />
                     </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="ambang_batas">Ambang Batas</Label>
-                    <Input
-                      id="ambang_batas"
-                      type="number"
-                      value={formData.ambang_batas}
-                      onChange={(e) => setFormData({...formData, ambang_batas: parseInt(e.target.value) || 0})}
-                      placeholder="Jumlah minimum"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+
+                    <div>
+                      <Label htmlFor="ambang_batas">Ambang Batas</Label>
+                      <Input
+                        id="ambang_batas"
+                        type="number"
+                        value={formData.ambang_batas}
+                        onChange={(e) => setFormData({ ...formData, ambang_batas: Number(e.target.value) })}
+                        placeholder="0"
+                      />
+                    </div>
+
                     <div>
                       <Label htmlFor="tanggal_beli">Tanggal Beli</Label>
                       <Input
                         id="tanggal_beli"
                         type="date"
                         value={formData.tanggal_beli}
-                        onChange={(e) => setFormData({...formData, tanggal_beli: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, tanggal_beli: e.target.value })}
                       />
                     </div>
+
                     <div>
                       <Label htmlFor="tanggal_kedaluwarsa">Tanggal Kedaluwarsa</Label>
                       <Input
                         id="tanggal_kedaluwarsa"
                         type="date"
                         value={formData.tanggal_kedaluwarsa}
-                        onChange={(e) => setFormData({...formData, tanggal_kedaluwarsa: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, tanggal_kedaluwarsa: e.target.value })}
                       />
                     </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-                    Batal
-                  </Button>
-                  <Button onClick={handleAddItem}>
-                    Tambah Barang
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                    </div>
+
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                        Batal
+                      </Button>
+                      <Button onClick={handleAddItem}>
+                        Simpan
+                      </Button>
+                    </DialogFooter>
+                    </DialogContent>
+                    </Dialog>
+
 
             {/* Edit Item Dialog */}
             <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
