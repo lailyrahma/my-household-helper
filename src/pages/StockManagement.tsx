@@ -698,18 +698,21 @@ const StockManagement = () => {
                   </div>
                   <div>
                     <Label htmlFor="kategori">Kategori *</Label>
-                    <Select value={formData.id_kategori} onValueChange={(value) => setFormData({...formData, id_kategori: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih kategori" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id_kategori} value={cat.id_kategori.toString()}>
-                            {cat.nama_kategori}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Select 
+                        value={formData.id_kategori} 
+                        onValueChange={(value) => setFormData({ ...formData, id_kategori: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih kategori" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id_kategori} value={category.id_kategori.toString()}>
+                              {category.nama_kategori}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
