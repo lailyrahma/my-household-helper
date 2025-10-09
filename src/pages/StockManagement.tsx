@@ -136,7 +136,7 @@ const StockManagement = () => {
       setLoading(true);
       // @ts-ignore
       const { data, error } = await supabase
-        .from('barang')
+        .from('kategori_produk')
         .select(`
           *,
           kategori_produk (
