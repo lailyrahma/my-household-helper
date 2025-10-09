@@ -121,20 +121,14 @@ const StockManagement = () => {
         .select('nama_kategori')
         .is('tanggal_dihapus', null);
       
-     if (error) {
-      console.error("Gagal fetch kategori:", error);
-      return;
-    }
-
-    if (data) {
-      // Gabungkan "semua" di awal + nama kategori dari Supabase
-      const names = ["semua", ...data.map((cat) => cat.nama_kategori)];
-      setCategories(names);
-    }
-  };
-
-  fetchCategories();
-}, []);
+      if (error) {
+        console.error('Error fetching categories:', error);
+      } else {
+        setCategories(data || []);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Fetch stock items with real-time updates
   useEffect(() => {
