@@ -112,7 +112,7 @@ const Landing = () => {
                   <span className="gradient-text">StockHome</span>
                 </h1>
                 <p className="text-xl text-muted-foreground leading-relaxed">
-                  Sistem manajemen inventaris rumah tangga yang cerdas dengan fitur berikut ini 
+                  Sistem manajemen inventaris rumah tangga yang cerdas dengan fitur 
                   <span className="text-primary font-semibold"> notifikasi otomatis</span>, 
                   <span className="text-accent font-semibold"> daftar belanja pintar</span>, dan 
                   <span className="text-secondary font-semibold"> analisis konsumsi</span>.
