@@ -89,7 +89,7 @@ const Register = () => {
       } else {
         toast({
           title: "Registrasi berhasil!",
-          description: "Akun Anda telah dibuat. Silakan masuk untuk melanjutkan.",
+          description: "Silakan periksa email Anda dan klik tautan konfirmasi untuk mengaktifkan akun sebelum masuk.",
         });
         navigate("/login");
       }
