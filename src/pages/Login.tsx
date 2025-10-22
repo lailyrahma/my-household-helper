@@ -9,6 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, Smartphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import heroImage from "@/assets/hero-image.jpg";
+import logoStockHome from "@/assets/logo-gambar.png";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -61,13 +63,19 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+    <div
+      className="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center p-4"
+      style={{ backgroundImage: `url(${heroImage})` }}>
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
             <div className="w-10 h-10 bg-primary-foreground rounded-xl flex items-center justify-center">
-              <Smartphone className="w-6 h-6 text-primary" />
+              <img
+                src={logoStockHome}
+                alt="Logo StockHome"
+                className="w-8 h-8 object-contain mr-0"
+              />
             </div>
             <h1 className="text-3xl font-bold text-primary-foreground">StockHome</h1>
           </Link>
