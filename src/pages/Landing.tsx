@@ -17,10 +17,12 @@ import {
   Smartphone
 } from "lucide-react";
 import heroImage from "@/assets/hero-image.jpg";
-import problemImage from "@/assets/problem-illustration.jpg";
+import problemImage from "@/assets/masalah-foto.jpg";
 import solutionImage from "@/assets/solution-illustration.jpg";
+import logoStockHome from "@/assets/logo-gambar.png"
+import mulaiStok from "@/assets/mulai-stok.jpg"
 
-const Landing = () => {
+function Landing() {
   const features = [
     {
       icon: TrendingUp,
@@ -29,7 +31,7 @@ const Landing = () => {
     },
     {
       icon: Bell,
-      title: "Reminder Otomatis", 
+      title: "Reminder Otomatis",
       description: "Notifikasi cerdas sebelum stok habis, tidak akan pernah kehabisan barang penting lagi"
     },
     {
@@ -56,7 +58,7 @@ const Landing = () => {
 
   const problems = [
     "Sering kehabisan barang penting di saat genting?",
-    "Belanja dobel karena kurang koordinasi?", 
+    "Belanja dobel karena kurang koordinasi?",
     "Catatan stok masih manual dan sering hilang?"
   ];
 
@@ -69,7 +71,7 @@ const Landing = () => {
 
   const freeFeatures = [
     "Catatan stok barang dasar",
-    "Reminder maksimal 5 item", 
+    "Reminder maksimal 5 item",
     "Daftar belanja manual",
     "1 user per akun"
   ];
@@ -78,7 +80,7 @@ const Landing = () => {
     "Semua fitur Free",
     "Reminder tanpa batas",
     "Daftar belanja otomatis & pintar",
-    "Kolaborasi multi-user", 
+    "Kolaborasi multi-user",
     "Integrasi marketplace",
     "Laporan konsumsi detail",
     "Akses prioritas tips & seminar"
@@ -89,11 +91,13 @@ const Landing = () => {
       {/* Header */}
       <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <Smartphone className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold gradient-text">StockHome</h1>
+          <div className="flex items-center">
+              <img
+                src={logoStockHome}
+                alt="Logo StockHome"
+                className="w-8 h-8 object-contain mr-2"
+              />
+            <h1 className="text-2xl font-bold">StockHome</h1>
           </div>
         </div>
       </header>
@@ -109,12 +113,12 @@ const Landing = () => {
                   🏠 Sistem Inventaris Cerdas
                 </Badge>
                 <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-                  <span className="gradient-text">StockHome</span>
+                  <span className="text font-bold">StockHome</span>
                 </h1>
                 <p className="text-xl text-muted-foreground leading-relaxed">
-                  Sistem manajemen inventaris rumah tangga yang cerdas dengan fitur 
-                  <span className="text-primary font-semibold"> notifikasi otomatis</span>, 
-                  <span className="text-accent font-semibold"> daftar belanja pintar</span>, dan 
+                  Sistem manajemen inventaris rumah tangga yang cerdas dengan fitur
+                  <span className="text-secondary font-semibold"> notifikasi otomatis</span>,
+                  <span className="text-secondary font-semibold"> daftar belanja pintar</span>, dan
                   <span className="text-secondary font-semibold"> analisis konsumsi</span>.
                 </p>
               </div>
@@ -129,11 +133,10 @@ const Landing = () => {
             </div>
             <div className="relative">
               <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-primary transition-all duration-500">
-                <img 
-                  src={heroImage} 
+                <img
+                  src={heroImage}
                   alt="Smart home inventory management system"
-                  className="w-full h-auto"
-                />
+                  className="w-full h-auto" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
               <div className="absolute -top-4 -right-4 w-24 h-24 bg-secondary rounded-full flex items-center justify-center shadow-lg animate-bounce">
@@ -149,11 +152,10 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative">
-              <img 
-                src={problemImage} 
+              <img
+                src={problemImage}
                 alt="Common household inventory problems"
-                className="w-full h-auto rounded-2xl shadow-card"
-              />
+                className="w-full h-auto rounded-2xl shadow-card" />
             </div>
             <div className="space-y-8">
               <div className="space-y-4">
@@ -204,11 +206,10 @@ const Landing = () => {
               </div>
             </div>
             <div className="relative">
-              <img 
-                src={solutionImage} 
+              <img
+                src={solutionImage}
                 alt="StockHome smart solutions"
-                className="w-full h-auto rounded-2xl shadow-card"
-              />
+                className="w-full h-auto rounded-2xl shadow-card" />
               <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-success rounded-full flex items-center justify-center shadow-lg">
                 <Check className="w-8 h-8 text-success-foreground" />
               </div>
@@ -316,14 +317,17 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-hero text-primary-foreground">
-        <div className="container mx-auto px-4 text-center">
+      <section 
+        className="relative h-[100vh] bg-cover bg-center text-white"
+        style={{ backgroundImage: `url(${mulaiStok})` }}>
+        <div className="absolute inset-0 bg-black/40"></div> 
+        <div className="relative flex flex-col justify-center items-center text-center h-full px-6">
           <div className="space-y-8 max-w-3xl mx-auto">
             <h2 className="text-4xl lg:text-5xl font-bold">
               Mulai Atur Stok Rumah Tangga dengan Lebih Cerdas
             </h2>
             <p className="text-xl opacity-90">
-              Bergabunglah dengan ribuan keluarga yang sudah merasakan kemudahan 
+              Bergabunglah dengan ribuan keluarga yang sudah merasakan kemudahan
               mengelola inventaris rumah tangga dengan StockHome
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -342,7 +346,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 bg-foreground text-background">
+      <footer className="py-8 bg-white text-black">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm opacity-80">
             Copyright © 2025 StockHome. All rights reserved.
@@ -351,6 +355,6 @@ const Landing = () => {
       </footer>
     </div>
   );
-};
+}
 
 export default Landing;
