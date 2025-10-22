@@ -37,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import logoStockHome from "@/assets/logo-gambar.png"
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -166,11 +167,13 @@ const Dashboard = () => {
       {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <Smartphone className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold gradient-text">StockHome</h1>
+          <div className="flex items-center">
+              <img
+                src={logoStockHome}
+                alt="Logo StockHome"
+                className="w-8 h-8 object-contain mr-2"
+              />
+            <h1 className="text-2xl font-bold">StockHome</h1>
           </div>
 
           <div className="flex items-center gap-2">
