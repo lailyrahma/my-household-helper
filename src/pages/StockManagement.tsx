@@ -68,9 +68,9 @@ const StockManagement = () => {
   const [formData, setFormData] = useState({
     nama_barang: "",
     id_kategori: "",
-    stok: 0,
+    stok: "",
     satuan: "",
-    ambang_batas: 0,
+    ambang_batas: "",
     tanggal_kedaluwarsa: "",
     tanggal_beli: ""
   });
