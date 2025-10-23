@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, Mail, Lock, Smartphone, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import logoStockHome from "@/assets/logo-gambar.png";
 
 const ResetPassword = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -54,7 +55,11 @@ const ResetPassword = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
             <div className="w-10 h-10 bg-primary-foreground rounded-xl flex items-center justify-center">
-              <Smartphone className="w-6 h-6 text-primary" />
+              <img
+                src={logoStockHome}
+                alt="Logo StockHome"
+                className="w-8 h-8 object-contain mr-0"
+              />
             </div>
             <h1 className="text-3xl font-bold text-primary-foreground">StockHome</h1>
           </Link>

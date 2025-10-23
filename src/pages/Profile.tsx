@@ -13,6 +13,7 @@ import {
   Save,
   Smartphone
 } from "lucide-react";
+import logoStockHome from "@/assets/logo-gambar.png";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -38,10 +39,12 @@ const Profile = () => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <Smartphone className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <h1 className="text-2xl font-bold gradient-text">StockHome</h1>
+                <img
+                  src={logoStockHome}
+                  alt="Logo StockHome"
+                  className="w-8 h-8 object-contain mr-0"
+                />
+              <h1 className="text-2xl font-bold">StockHome</h1>
             </div>
           </div>
         </div>

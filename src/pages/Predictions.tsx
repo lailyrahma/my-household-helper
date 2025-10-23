@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import logoStockHome from "@/assets/logo-gambar.png";
 
 const Predictions = () => {
   const { id } = useParams();
@@ -142,10 +143,12 @@ const Predictions = () => {
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
             <div className="flex items-center gap-2 flex-1">
-              <div className="w-6 h-6 bg-gradient-primary rounded flex items-center justify-center">
-                <Home className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <h1 className="text-xl font-bold gradient-text">StockHome</h1>
+                <img
+                  src={logoStockHome}
+                  alt="Logo StockHome"
+                  className="w-8 h-8 object-contain mr-0"
+                />
+              <h1 className="text-xl font-bold">StockHome</h1>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4">
