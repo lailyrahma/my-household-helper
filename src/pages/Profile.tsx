@@ -167,7 +167,7 @@ const Profile = () => {
                   maxLength={72}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Kata sandi minimal 6 karakter, maksimal 72 karakter
+                  Kata sandi minimal 6 karakter
                 </p>
               </div>
 
