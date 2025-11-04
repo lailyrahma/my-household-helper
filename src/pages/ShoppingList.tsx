@@ -56,16 +56,11 @@ const ShoppingList = () => {
   const [filterStatus, setFilterStatus] = useState("semua");
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [shoppingItems, setShoppingItems] = useState<any[]>([]);
+  const [availableItems, setAvailableItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    nama_barang: "",
-    id_kategori: "",
-    quantity: 1,
-    unit: "",
-    note: ""
-  });
+  const [currentShoppingList, setCurrentShoppingList] = useState<any>(null);
+  const [addFromStockDialogOpen, setAddFromStockDialogOpen] = useState(false);
 
   if (!user || !id) {
     navigate('/');
@@ -106,22 +101,75 @@ const ShoppingList = () => {
     fetchCategories();
   }, []);
 
-  // Fetch shopping items (items with status "Habis" or "Hampir Habis")
+  // Get or create active shopping list
   useEffect(() => {
+    const getOrCreateShoppingList = async () => {
+      // @ts-ignore
+      const { data: existingList, error: fetchError } = await supabase
+        .from('daftar_belanja')
+        .select('*')
+        .eq('id_rumah', parseInt(id))
+        .eq('status', 'proses')
+        .is('tanggal_dihapus', null)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('Error fetching shopping list:', fetchError);
+        return;
+      }
+
+      if (existingList) {
+        setCurrentShoppingList(existingList);
+      } else {
+        // Create new shopping list
+        // @ts-ignore
+        const { data: newList, error: createError } = await supabase
+          .from('daftar_belanja')
+          .insert({
+            id_rumah: parseInt(id),
+            status: 'proses',
+            tanggal_rencana: new Date().toISOString().split('T')[0]
+          } as any)
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating shopping list:', createError);
+        } else {
+          setCurrentShoppingList(newList);
+        }
+      }
+    };
+
+    getOrCreateShoppingList();
+  }, [id]);
+
+  // Fetch shopping items from rekomendasi_belanja
+  useEffect(() => {
+    if (!currentShoppingList) return;
+
     const fetchShoppingItems = async () => {
       setLoading(true);
       // @ts-ignore
       const { data, error } = await supabase
-        .from('barang')
+        .from('rekomendasi_belanja')
         .select(`
           *,
-          kategori_produk (
-            id_kategori,
-            nama_kategori
+          barang (
+            id_barang,
+            nama_barang,
+            satuan,
+            stok,
+            ambang_batas,
+            status,
+            tanggal_kedaluwarsa,
+            kategori_produk (
+              id_kategori,
+              nama_kategori
+            )
           )
         `)
-        .eq('id_rumah', parseInt(id))
-        .in('status', ['Habis', 'Hampir Habis'])
+        .eq('id_daftar', currentShoppingList.id_daftar)
         .is('tanggal_dihapus', null)
         .order('tanggal_dibuat', { ascending: false });
       
@@ -142,12 +190,12 @@ const ShoppingList = () => {
 
     // Subscribe to real-time changes
     const channel = supabase
-      .channel('shopping-changes')
+      .channel('shopping-list-changes')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'barang',
-        filter: `id_rumah=eq.${id}`
+        table: 'rekomendasi_belanja',
+        filter: `id_daftar=eq.${currentShoppingList.id_daftar}`
       }, () => {
         fetchShoppingItems();
       })
@@ -156,7 +204,52 @@ const ShoppingList = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id, toast]);
+  }, [currentShoppingList, toast]);
+
+  // Fetch available items from barang (Habis or Hampir Habis)
+  useEffect(() => {
+    const fetchAvailableItems = async () => {
+      // @ts-ignore
+      const { data, error } = await supabase
+        .from('barang')
+        .select(`
+          *,
+          kategori_produk (
+            id_kategori,
+            nama_kategori
+          )
+        `)
+        .eq('id_rumah', parseInt(id))
+        .in('status', ['Habis', 'Hampir Habis'])
+        .is('tanggal_dihapus', null)
+        .order('status', { ascending: true }); // Habis first
+      
+      if (error) {
+        console.error('Error fetching available items:', error);
+      } else {
+        setAvailableItems(data || []);
+      }
+    };
+
+    fetchAvailableItems();
+
+    // Subscribe to real-time changes on barang
+    const channel = supabase
+      .channel('barang-status-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'barang',
+        filter: `id_rumah=eq.${id}`
+      }, () => {
+        fetchAvailableItems();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
 
   const categoryNames = ["semua", ...categories.map(c => c.nama_kategori)];
   const statuses = ["semua", "Habis", "Hampir Habis"];
@@ -167,45 +260,57 @@ const ShoppingList = () => {
         return "bg-red-500/10 text-red-600 border-red-200";
       case "Hampir Habis":
         return "bg-orange-500/10 text-orange-600 border-orange-200";
+      case "selesai":
+        return "bg-green-500/10 text-green-600 border-green-200";
+      case "menunggu":
+        return "bg-blue-500/10 text-blue-600 border-blue-200";
       default:
         return "bg-gray-500/10 text-gray-600 border-gray-200";
     }
   };
 
-  // Add item handler
-  const handleAddItem = async () => {
-    if (!formData.nama_barang || !formData.id_kategori || !formData.unit) {
+  // Add item from stock to shopping list
+  const handleAddToShoppingList = async (item: any) => {
+    if (!currentShoppingList) {
       toast({
         title: "Error",
-        description: "Mohon lengkapi semua field yang wajib",
+        description: "Daftar belanja tidak ditemukan",
         variant: "destructive"
       });
       return;
     }
 
+    // Check if item already in shopping list
+    const existingItem = shoppingItems.find(si => si.id_barang === item.id_barang);
+    if (existingItem) {
+      toast({
+        title: "Info",
+        description: "Barang sudah ada di daftar belanja",
+        variant: "default"
+      });
+      return;
+    }
+
     // @ts-ignore
-    const { error } = await supabase.from('barang').insert({
-      id_rumah: parseInt(id),
-      user_id: user.id,
-      nama_barang: formData.nama_barang,
-      id_kategori: parseInt(formData.id_kategori),
-      stok: 0,
-      satuan: formData.unit,
-      ambang_batas: formData.quantity,
-      status: "Habis"
+    const { error } = await supabase.from('rekomendasi_belanja').insert({
+      id_daftar: currentShoppingList.id_daftar,
+      id_barang: item.id_barang,
+      jumlah_disarankan: item.ambang_batas - item.stok,
+      metode: 'manual',
+      status: 'menunggu'
     } as any);
 
     if (error) {
-      console.error('Error adding item:', error);
+      console.error('Error adding to shopping list:', error);
       toast({
         title: "Error",
-        description: "Gagal menambahkan barang",
+        description: "Gagal menambahkan ke daftar belanja",
         variant: "destructive"
       });
     } else {
       toast({
         title: "Berhasil",
-        description: "Barang berhasil ditambahkan ke daftar belanja"
+        description: `${item.nama_barang} ditambahkan ke daftar belanja`
       });
       
       // Log activity
@@ -213,37 +318,39 @@ const ShoppingList = () => {
         // @ts-ignore
         await supabase.from('aktivitas').insert({
           id_rumah: parseInt(id),
+          id_barang: item.id_barang,
           user_id: user.id,
           aksi: 'Tambah',
-          deskripsi: `Menambahkan ${formData.nama_barang} ke daftar belanja`
+          deskripsi: `Menambahkan ${item.nama_barang} ke daftar belanja`
         } as any);
       } catch (err) {
         console.error('Error logging activity:', err);
       }
-
-      setAddDialogOpen(false);
-      setFormData({
-        nama_barang: "",
-        id_kategori: "",
-        quantity: 1,
-        unit: "",
-        note: ""
-      });
     }
   };
 
   const filteredItems = shoppingItems.filter(item => {
-    const matchesSearch = item.nama_barang.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === "semua" || item.kategori_produk?.nama_kategori === filterCategory;
+    const barang = item.barang;
+    if (!barang) return false;
+    const matchesSearch = barang.nama_barang.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === "semua" || barang.kategori_produk?.nama_kategori === filterCategory;
     const matchesStatus = filterStatus === "semua" || item.status === filterStatus;
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  const handleItemSelect = (itemId: number, checked: boolean) => {
+  const filteredAvailableItems = availableItems.filter(item => {
+    const matchesSearch = item.nama_barang.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = filterCategory === "semua" || item.kategori_produk?.nama_kategori === filterCategory;
+    // Check if not already in shopping list
+    const notInList = !shoppingItems.some(si => si.id_barang === item.id_barang);
+    return matchesSearch && matchesCategory && notInList;
+  });
+
+  const handleItemSelect = (rekomendasiId: number, checked: boolean) => {
     if (checked) {
-      setSelectedItems([...selectedItems, itemId]);
+      setSelectedItems([...selectedItems, rekomendasiId]);
     } else {
-      setSelectedItems(selectedItems.filter(id => id !== itemId));
+      setSelectedItems(selectedItems.filter(id => id !== rekomendasiId));
     }
   };
 
@@ -255,19 +362,28 @@ const ShoppingList = () => {
     }
   };
 
-  const handleMarkAsBought = async (itemId: number) => {
-    const item = shoppingItems.find(i => i.id_barang === itemId);
-    if (!item) return;
+  const handleMarkAsBought = async (rekomendasiId: number, barangId: number) => {
+    const rekomendasi = shoppingItems.find(i => i.id_rekomendasi === rekomendasiId);
+    if (!rekomendasi) return;
 
+    // Update rekomendasi status to selesai
     // @ts-ignore
-    const { error } = await supabase.from('barang').update({
-      status: "Cukup",
-      stok: item.ambang_batas + 5, // Set stock above threshold
+    const { error: rekError } = await supabase.from('rekomendasi_belanja').update({
+      status: 'selesai',
       tanggal_diupdate: new Date().toISOString()
-    } as any).eq('id_barang', itemId);
+    } as any).eq('id_rekomendasi', rekomendasiId);
 
-    if (error) {
-      console.error('Error marking as bought:', error);
+    // Update barang stock
+    const newStock = rekomendasi.barang.ambang_batas + rekomendasi.jumlah_disarankan;
+    // @ts-ignore
+    const { error: barangError } = await supabase.from('barang').update({
+      status: "Cukup",
+      stok: newStock,
+      tanggal_diupdate: new Date().toISOString()
+    } as any).eq('id_barang', barangId);
+
+    if (rekError || barangError) {
+      console.error('Error marking as bought:', rekError || barangError);
       toast({
         title: "Error",
         description: "Gagal menandai barang sebagai dibeli",
@@ -284,10 +400,10 @@ const ShoppingList = () => {
         // @ts-ignore
         await supabase.from('aktivitas').insert({
           id_rumah: parseInt(id),
-          id_barang: itemId,
+          id_barang: barangId,
           user_id: user.id,
           aksi: 'Update',
-          deskripsi: `Menandai ${item.nama_barang} sebagai sudah dibeli`
+          deskripsi: `Menandai ${rekomendasi.barang.nama_barang} sebagai sudah dibeli`
         } as any);
       } catch (err) {
         console.error('Error logging activity:', err);
@@ -295,15 +411,15 @@ const ShoppingList = () => {
     }
   };
 
-  const handleDeleteItem = async (itemId: number) => {
-    const item = shoppingItems.find(i => i.id_barang === itemId);
-    if (!item) return;
-    if (!confirm(`Apakah Anda yakin ingin menghapus ${item.nama_barang}?`)) return;
+  const handleDeleteItem = async (rekomendasiId: number) => {
+    const rekomendasi = shoppingItems.find(i => i.id_rekomendasi === rekomendasiId);
+    if (!rekomendasi) return;
+    if (!confirm(`Apakah Anda yakin ingin menghapus ${rekomendasi.barang.nama_barang}?`)) return;
 
     // @ts-ignore
-    const { error } = await supabase.from('barang').update({
+    const { error } = await supabase.from('rekomendasi_belanja').update({
       tanggal_dihapus: new Date().toISOString()
-    } as any).eq('id_barang', itemId);
+    } as any).eq('id_rekomendasi', rekomendasiId);
 
     if (error) {
       console.error('Error deleting item:', error);
@@ -315,7 +431,7 @@ const ShoppingList = () => {
     } else {
       toast({
         title: "Berhasil",
-        description: "Barang berhasil dihapus"
+        description: "Barang berhasil dihapus dari daftar belanja"
       });
       
       // Log activity
@@ -323,10 +439,10 @@ const ShoppingList = () => {
         // @ts-ignore
         await supabase.from('aktivitas').insert({
           id_rumah: parseInt(id),
-          id_barang: itemId,
+          id_barang: rekomendasi.id_barang,
           user_id: user.id,
           aksi: 'Hapus',
-          deskripsi: `Menghapus ${item.nama_barang} dari daftar belanja`
+          deskripsi: `Menghapus ${rekomendasi.barang.nama_barang} dari daftar belanja`
         } as any);
       } catch (err) {
         console.error('Error logging activity:', err);
@@ -338,13 +454,16 @@ const ShoppingList = () => {
     if (selectedItems.length === 0) return;
 
     if (action === 'markBought') {
-      for (const itemId of selectedItems) {
-        await handleMarkAsBought(itemId);
+      for (const rekId of selectedItems) {
+        const rek = shoppingItems.find(i => i.id_rekomendasi === rekId);
+        if (rek) {
+          await handleMarkAsBought(rekId, rek.id_barang);
+        }
       }
       setSelectedItems([]);
     } else if (action === 'delete') {
-      for (const itemId of selectedItems) {
-        await handleDeleteItem(itemId);
+      for (const rekId of selectedItems) {
+        await handleDeleteItem(rekId);
       }
       setSelectedItems([]);
     }
@@ -464,9 +583,9 @@ const ShoppingList = () => {
                   <Download className="w-4 h-4" />
                   <span>Export PDF</span>
                 </Button>
-                <Button className="gap-2 w-full sm:w-auto" onClick={() => setAddDialogOpen(true)}>
+                <Button className="gap-2 w-full sm:w-auto" onClick={() => setAddFromStockDialogOpen(true)}>
                   <Plus className="w-4 h-4" />
-                  <span>Tambah Barang</span>
+                  <span>Tambah dari Stok</span>
                 </Button>
               </div>
             </div>
@@ -586,75 +705,85 @@ const ShoppingList = () => {
                   {loading ? (
                     <div className="text-center py-8 text-muted-foreground">Memuat data...</div>
                   ) : filteredItems.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">Tidak ada barang yang perlu dibeli</div>
+                    <div className="text-center py-8 text-muted-foreground">
+                      Tidak ada barang di daftar belanja. Klik "Tambah dari Stok" untuk menambahkan.
+                    </div>
                   ) : (
-                    filteredItems.map((item) => (
-                      <div key={item.id_barang} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 border rounded-lg">
-                        <Checkbox
-                          checked={selectedItems.includes(item.id_barang)}
-                          onCheckedChange={(checked) => handleItemSelect(item.id_barang, checked as boolean)}
-                          className="self-start sm:self-center"
-                        />
-                        
-                        <div className="flex-1 space-y-2 sm:space-y-3">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <h3 className="font-medium text-base">{item.nama_barang}</h3>
-                            <div className="flex gap-2 flex-wrap">
-                              <Badge className={`${getStatusColor(item.status)} text-xs`}>
-                                {item.status}
-                              </Badge>
+                    filteredItems.map((rekomendasi) => {
+                      const item = rekomendasi.barang;
+                      if (!item) return null;
+                      return (
+                        <div key={rekomendasi.id_rekomendasi} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 border rounded-lg">
+                          <Checkbox
+                            checked={selectedItems.includes(rekomendasi.id_rekomendasi)}
+                            onCheckedChange={(checked) => handleItemSelect(rekomendasi.id_rekomendasi, checked as boolean)}
+                            className="self-start sm:self-center"
+                          />
+                          
+                          <div className="flex-1 space-y-2 sm:space-y-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                              <h3 className="font-medium text-base">{item.nama_barang}</h3>
+                              <div className="flex gap-2 flex-wrap">
+                                <Badge className={`${getStatusColor(rekomendasi.status)} text-xs`}>
+                                  {rekomendasi.status}
+                                </Badge>
+                                <Badge className={`${getStatusColor(item.status)} text-xs`}>
+                                  {item.status}
+                                </Badge>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <span className="text-muted-foreground text-xs">Kategori:</span>
+                                <p className="text-sm">{item.kategori_produk?.nama_kategori || '-'}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground text-xs">Stok Saat Ini:</span>
+                                <p className="font-medium text-sm">{item.stok} {item.satuan}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground text-xs">Perlu Dibeli:</span>
+                                <p className="font-medium text-sm text-primary">{rekomendasi.jumlah_disarankan} {item.satuan}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground text-xs">Kadaluarsa:</span>
+                                <p className="text-sm">
+                                  {item.tanggal_kedaluwarsa ? (
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="w-3 h-3" />
+                                      {new Date(item.tanggal_kedaluwarsa).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </span>
+                                  ) : '-'}
+                                </p>
+                              </div>
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div>
-                              <span className="text-muted-foreground text-xs">Kategori:</span>
-                              <p className="text-sm">{item.kategori_produk?.nama_kategori || '-'}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground text-xs">Stok Saat Ini:</span>
-                              <p className="font-medium text-sm">{item.stok} {item.satuan}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground text-xs">Ambang Batas:</span>
-                              <p className="text-sm">{item.ambang_batas} {item.satuan}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground text-xs">Kadaluarsa:</span>
-                              <p className="text-sm">
-                                {item.tanggal_kedaluwarsa ? (
-                                  <span className="flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" />
-                                    {new Date(item.tanggal_kedaluwarsa).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                  </span>
-                                ) : '-'}
-                              </p>
-                            </div>
+                          <div className="flex sm:flex-col gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l sm:pl-3">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleMarkAsBought(rekomendasi.id_rekomendasi, rekomendasi.id_barang)}
+                              disabled={rekomendasi.status === 'selesai'}
+                              className="flex-1 sm:flex-none gap-1"
+                            >
+                              <Check className="w-4 h-4" />
+                              <span className="text-xs sm:hidden">Beli</span>
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="flex-1 sm:flex-none gap-1"
+                              onClick={() => handleDeleteItem(rekomendasi.id_rekomendasi)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span className="text-xs sm:hidden">Hapus</span>
+                            </Button>
                           </div>
                         </div>
-                        
-                        <div className="flex sm:flex-col gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l sm:pl-3">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleMarkAsBought(item.id_barang)}
-                            className="flex-1 sm:flex-none gap-1"
-                          >
-                            <Check className="w-4 h-4" />
-                            <span className="text-xs sm:hidden">Beli</span>
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="flex-1 sm:flex-none gap-1"
-                            onClick={() => handleDeleteItem(item.id_barang)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            <span className="text-xs sm:hidden">Hapus</span>
-                          </Button>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </CardContent>
@@ -686,77 +815,60 @@ const ShoppingList = () => {
               </CardContent>
             </Card>
 
-            {/* Add Item Dialog */}
-            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-              <DialogContent>
+            {/* Add from Stock Dialog */}
+            <Dialog open={addFromStockDialogOpen} onOpenChange={setAddFromStockDialogOpen}>
+              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Tambah Barang ke Daftar Belanja</DialogTitle>
+                  <DialogTitle>Tambah Barang dari Stok</DialogTitle>
                   <DialogDescription>
-                    Tambahkan barang baru yang perlu dibeli
+                    Pilih barang yang perlu dibeli dari daftar stok
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="nama_barang">Nama Barang *</Label>
-                    <Input
-                      id="nama_barang"
-                      value={formData.nama_barang}
-                      onChange={(e) => setFormData({...formData, nama_barang: e.target.value})}
-                      placeholder="Contoh: Beras"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="kategori">Kategori *</Label>
-                    <Select value={formData.id_kategori} onValueChange={(value) => setFormData({...formData, id_kategori: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih kategori" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id_kategori} value={cat.id_kategori.toString()}>
-                            {cat.nama_kategori}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="quantity">Jumlah yang Dibutuhkan *</Label>
-                      <Input
-                        id="quantity"
-                        type="number"
-                        value={formData.quantity}
-                        onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}
-                        placeholder="5"
-                      />
+                <div className="space-y-3">
+                  {filteredAvailableItems.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Tidak ada barang dengan status "Habis" atau "Hampir Habis"
                     </div>
-                    <div>
-                      <Label htmlFor="unit">Satuan *</Label>
-                      <Input
-                        id="unit"
-                        value={formData.unit}
-                        onChange={(e) => setFormData({...formData, unit: e.target.value})}
-                        placeholder="kg, pcs, dll"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="note">Catatan (Opsional)</Label>
-                    <Input
-                      id="note"
-                      value={formData.note}
-                      onChange={(e) => setFormData({...formData, note: e.target.value})}
-                      placeholder="Contoh: Merek Ramos"
-                    />
-                  </div>
+                  ) : (
+                    filteredAvailableItems.map((item) => (
+                      <div key={item.id_barang} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-medium">{item.nama_barang}</h3>
+                            <Badge className={`${getStatusColor(item.status)} text-xs`}>
+                              {item.status}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-3 gap-3 text-sm text-muted-foreground">
+                            <div>
+                              <span className="text-xs">Kategori:</span>
+                              <p className="font-medium text-foreground">{item.kategori_produk?.nama_kategori || '-'}</p>
+                            </div>
+                            <div>
+                              <span className="text-xs">Stok:</span>
+                              <p className="font-medium text-foreground">{item.stok} {item.satuan}</p>
+                            </div>
+                            <div>
+                              <span className="text-xs">Perlu:</span>
+                              <p className="font-medium text-primary">{item.ambang_batas - item.stok} {item.satuan}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAddToShoppingList(item)}
+                          className="gap-2 ml-4"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Tambah
+                        </Button>
+                      </div>
+                    ))
+                  )}
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-                    Batal
-                  </Button>
-                  <Button onClick={handleAddItem}>
-                    Tambah Barang
+                  <Button variant="outline" onClick={() => setAddFromStockDialogOpen(false)}>
+                    Tutup
                   </Button>
                 </DialogFooter>
               </DialogContent>
