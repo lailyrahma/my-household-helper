@@ -69,7 +69,7 @@ const StockManagement = () => {
   const [formData, setFormData] = useState({
     nama_barang: "",
     id_kategori: "",
-    stok: "",
+    stok: 0,
     satuan: "",
     ambang_batas: 1,
     tanggal_kedaluwarsa: "",
@@ -204,7 +204,7 @@ const StockManagement = () => {
       ambang_batas: formData.ambang_batas,
       tanggal_kedaluwarsa: formData.tanggal_kedaluwarsa || null,
       tanggal_beli: formData.tanggal_beli || null,
-      status: formData.stok === 0 ? "Habis" : formData.stok <= formData.ambang_batas ? "Hampir Habis" : "Cukup"
+      status: Number(formData.stok) === 0 ? "Habis" : Number(formData.stok) <= formData.ambang_batas ? "Hampir Habis" : "Cukup"
     } as any);
 
     if (error) {
@@ -226,7 +226,7 @@ const StockManagement = () => {
         id_kategori: "",
         stok: 0,
         satuan: "",
-        ambang_batas: 0,
+        ambang_batas: 1,
         tanggal_kedaluwarsa: "",
         tanggal_beli: ""
       });
@@ -237,7 +237,7 @@ const StockManagement = () => {
   const handleEditItem = async () => {
     if (!selectedItem) return;
 
-    const newStatus = formData.stok === 0 ? "Habis" : formData.stok <= formData.ambang_batas ? "Hampir Habis" : "Cukup";
+    const newStatus = Number(formData.stok) === 0 ? "Habis" : Number(formData.stok) <= formData.ambang_batas ? "Hampir Habis" : "Cukup";
 
     // @ts-ignore
     const { error } = await supabase.from('barang').update({
