@@ -1,6 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
@@ -28,16 +31,127 @@ import {
 } from "@/components/ui/dropdown-menu";
 import logoStockHome from "@/assets/logo-gambar.png";
 
+interface Member {
+  id_anggota: number;
+  id_pengguna: number;
+  id_rumah: number;
+  peran: string;
+  status: string;
+  tanggal_dibuat: string;
+  tanggal_dihapus: string | null;
+  tanggal_diupdate: string;
+  user_id?: string;
+}
+
+interface House {
+  id_rumah: number;
+  nama_rumah: string;
+}
+
 const Members = () => {
   const { id } = useParams();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [members, setMembers] = useState<Member[]>([]);
+  const [houses, setHouses] = useState<House[]>([]);
+  const [currentHouse, setCurrentHouse] = useState<House | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
       navigate('/');
     }
   }, [user, navigate]);
+
+  // Fetch houses
+  useEffect(() => {
+    const fetchHouses = async () => {
+      if (!user) return;
+
+      // @ts-ignore - Supabase types may not be up to date
+      const { data, error } = await supabase
+        .from('rumah')
+        .select('*')
+        .eq('user_id', user.id)
+        .is('tanggal_dihapus', null);
+
+      if (error) {
+        console.error('Error fetching houses:', error);
+        toast({
+          title: "Error",
+          description: "Gagal memuat data rumah",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data) {
+        setHouses(data);
+        const house = data.find(h => h.id_rumah.toString() === id);
+        setCurrentHouse(house || null);
+      }
+    };
+
+    fetchHouses();
+  }, [user, id, toast]);
+
+  // Fetch members
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!user || !id) return;
+
+      setLoading(true);
+      
+      // @ts-ignore - Supabase types may not be up to date
+      const { data, error } = await supabase
+        .from('anggota_rumah')
+        .select('*')
+        .eq('id_rumah', parseInt(id))
+        .is('tanggal_dihapus', null)
+        .order('tanggal_bergabung', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching members:', error);
+        toast({
+          title: "Error",
+          description: "Gagal memuat data anggota",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (data) {
+        setMembers(data);
+      }
+      
+      setLoading(false);
+    };
+
+    fetchMembers();
+
+    // Real-time subscription
+    const channel = supabase
+      .channel('members-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'anggota_rumah',
+          filter: `id_rumah=eq.${id}`
+        },
+        () => {
+          fetchMembers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, id, toast]);
 
   if (!user || !id) {
     return null;
@@ -47,48 +161,6 @@ const Members = () => {
     await signOut();
     navigate('/');
   };
-
-  const houses = [
-    { id: "1", name: "Rumah A" },
-    { id: "2", name: "Kos B" }
-  ];
-
-  const currentHouse = houses.find(h => h.id === id) || { name: "Rumah Tidak Ditemukan" };
-
-  const members = [
-    { 
-      id: 1, 
-      name: "Andi Wijaya", 
-      email: "andi@email.com", 
-      role: "admin", 
-      status: "active",
-      joinedDate: "15 Jan 2025"
-    },
-    { 
-      id: 2, 
-      name: "Rani Putri", 
-      email: "rani@email.com", 
-      role: "member", 
-      status: "active",
-      joinedDate: "20 Jan 2025"
-    },
-    { 
-      id: 3, 
-      name: "Sari Indah", 
-      email: "sari@email.com", 
-      role: "member", 
-      status: "active",
-      joinedDate: "25 Jan 2025"
-    },
-    { 
-      id: 4, 
-      name: "Budi Santoso", 
-      email: "budi@email.com", 
-      role: "member", 
-      status: "pending",
-      joinedDate: "28 Jan 2025"
-    },
-  ];
 
   const getRoleBadge = (role: string) => {
     return role === "admin" ? (
@@ -102,7 +174,7 @@ const Members = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    return status === "active" ? (
+    return status === "aktif" ? (
       <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
         Aktif
       </Badge>
@@ -112,6 +184,10 @@ const Members = () => {
       </Badge>
     );
   };
+
+  const activeMembers = members.filter(m => m.status === 'aktif');
+  const adminMembers = members.filter(m => m.peran === 'admin');
+  const pendingMembers = members.filter(m => m.status === 'menunggu');
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -136,15 +212,15 @@ const Members = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-1 sm:gap-2 text-sm">
                     <Home className="w-4 h-4" />
-                    <span className="hidden sm:inline">{currentHouse.name}</span>
+                    <span className="hidden sm:inline">{currentHouse?.nama_rumah || 'Rumah'}</span>
                     <ChevronDown className="w-4 h-4 hidden sm:inline" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
                   {houses.map((house) => (
-                    <DropdownMenuItem key={house.id} onClick={() => navigate(`/house/${house.id}`)}>
+                    <DropdownMenuItem key={house.id_rumah} onClick={() => navigate(`/house/${house.id_rumah}`)}>
                       <Home className="w-4 h-4 mr-2" />
-                      {house.name}
+                      {house.nama_rumah}
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
@@ -194,7 +270,7 @@ const Members = () => {
               <div className="space-y-1 sm:space-y-2">
                 <h1 className="text-2xl sm:text-3xl font-bold">Kelola Anggota</h1>
                 <p className="text-muted-foreground text-sm sm:text-base">
-                  Atur anggota dan izin akses untuk {currentHouse.name}
+                  Atur anggota dan izin akses untuk {currentHouse?.nama_rumah || 'Rumah'}
                 </p>
               </div>
               <Button className="gap-2 w-full sm:w-auto">
@@ -213,7 +289,7 @@ const Members = () => {
                   <User className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{members.filter(m => m.status === 'active').length}</div>
+                  <div className="text-2xl font-bold">{activeMembers.length}</div>
                   <p className="text-xs text-muted-foreground">
                     {members.length} total termasuk pending
                   </p>
@@ -228,7 +304,7 @@ const Members = () => {
                   <Shield className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{members.filter(m => m.role === 'admin').length}</div>
+                  <div className="text-2xl font-bold">{adminMembers.length}</div>
                   <p className="text-xs text-muted-foreground">
                     Dengan akses penuh
                   </p>
@@ -243,7 +319,7 @@ const Members = () => {
                   <Mail className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{members.filter(m => m.status === 'pending').length}</div>
+                  <div className="text-2xl font-bold">{pendingMembers.length}</div>
                   <p className="text-xs text-muted-foreground">
                     Undangan pending
                   </p>
@@ -256,50 +332,60 @@ const Members = () => {
               <CardHeader>
                 <CardTitle>Daftar Anggota</CardTitle>
                 <CardDescription>
-                  Anggota yang terdaftar di {currentHouse.name}
+                  Anggota yang terdaftar di {currentHouse?.nama_rumah || 'Rumah'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {members.map((member) => (
-                    <div 
-                      key={member.id} 
-                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors gap-3 sm:gap-4"
-                    >
-                      <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-                        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                          <User className="w-6 h-6 text-primary" />
+                {loading ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Memuat data anggota...
+                  </div>
+                ) : members.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Belum ada anggota. Undang anggota pertama Anda!
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {members.map((member) => (
+                      <div 
+                        key={member.id_anggota} 
+                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors gap-3 sm:gap-4"
+                      >
+                        <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                            <User className="w-6 h-6 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">Anggota #{member.id_pengguna}</p>
+                            <p className="text-sm text-muted-foreground">ID Anggota: {member.id_anggota}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Bergabung: {format(new Date(member.tanggal_dibuat), 'dd MMM yyyy')}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{member.name}</p>
-                          <p className="text-sm text-muted-foreground">{member.email}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Bergabung: {member.joinedDate}
-                          </p>
+                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap w-full sm:w-auto justify-between sm:justify-end">
+                          {getRoleBadge(member.peran)}
+                          {getStatusBadge(member.status)}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>Edit Role</DropdownMenuItem>
+                              <DropdownMenuItem>Kirim Ulang Undangan</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive">
+                                Hapus Anggota
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap w-full sm:w-auto justify-between sm:justify-end">
-                        {getRoleBadge(member.role)}
-                        {getStatusBadge(member.status)}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Edit Role</DropdownMenuItem>
-                            <DropdownMenuItem>Kirim Ulang Undangan</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
-                              Hapus Anggota
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
